@@ -4,19 +4,58 @@ import InductionArcadeScene from "./induction-arcade-scene.js";
 let arcadeGame = null;
 let arcadeScene = null;
 
+function calculateGameDimensions() {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  const maxHeight = 720;
+  const targetHeight = Math.min(viewportHeight, maxHeight);
+
+  const windowAspect = viewportWidth / viewportHeight;
+  const maxAspect = 5 / 9; // always taller than wide
+  const targetAspect = Math.min(windowAspect, maxAspect);
+
+  const targetWidth = Math.round(targetHeight * targetAspect);
+
+  return { width: targetWidth, height: targetHeight };
+}
+
+function resizeCanvas(game) {
+  if (!game) return;
+
+  const { width, height } = calculateGameDimensions();
+  game.scale.resize(width, height);
+
+  const canvas = game.canvas;
+  if (canvas) {
+    canvas.style.height = "100vh";
+    canvas.style.width = "auto";
+    canvas.style.maxHeight = "100vh";
+    canvas.style.maxWidth = "calc(100vh * 5 / 9)";
+  }
+}
+
 export function initArcadeGame({ onGameEvent } = {}) {
   if (arcadeGame) return { game: arcadeGame, scene: arcadeScene };
 
+  const { width, height } = calculateGameDimensions();
+
   const config = {
     type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width,
+    height,
     parent: "game",
     backgroundColor: "#000000",
+    scale: {
+      mode: Phaser.Scale.NONE,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     scene: [InductionArcadeScene],
   };
 
   arcadeGame = new Phaser.Game(config);
+
+  resizeCanvas(arcadeGame);
 
   // wait until the scene has been created
   arcadeGame.events.on("ready", () => {
@@ -25,6 +64,8 @@ export function initArcadeGame({ onGameEvent } = {}) {
       arcadeScene.externalEventHandler = onGameEvent;
     }
   });
+
+  window.addEventListener("resize", () => resizeCanvas(arcadeGame));
 
   return { game: arcadeGame, scene: arcadeScene };
 }
