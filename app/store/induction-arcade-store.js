@@ -52,15 +52,18 @@ function normalizeGameId(raw) {
 
 function parseStartingGameFromHash() {
   if (typeof window === "undefined") return null;
+    console.log("Parsing starting game from URL hash");
+    // get search params from URL hash
+    const hash = window.location.hash || "";
+    console.log("Current URL hash:", hash);
+    const hashParamsString = hash.includes("?")
+      ? hash.split("?")[1]
+      : "";
+    const hashParams = new URLSearchParams(hashParamsString);
+    const gameParam = hashParams.get("game");
 
-  const hash = window.location.hash || "";
-  const queryIndex = hash.indexOf("?");
-  if (queryIndex === -1) return null;
 
-  const query = hash.slice(queryIndex + 1);
-  const params = new URLSearchParams(query);
-  const gameParam = params.get("game");
-
+console.log("Parsed game param from URL:", gameParam);
   return normalizeGameId(gameParam);
 }
 
@@ -205,6 +208,8 @@ export default function inductionArcadeStore(state, emitter) {
   // user presses "I am ready to begin"
   emitter.on("inductionArcade/startGame", () => {
     const startingGameFromUrl = parseStartingGameFromHash();
+        console.log("Starting induction arcade game", startingGameFromUrl);
+
     state.inductionArcade.startingGame =
       startingGameFromUrl || state.inductionArcade.startingGame;
     state.inductionArcade.phase = "game";
