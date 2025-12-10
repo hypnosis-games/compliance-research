@@ -1,0 +1,144 @@
+.pretest-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Progress bar */
+.progress-bg {
+  background: #f4f4f4;
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5, #ec4899);
+  transition: width 0.3s ease-out;
+}
+
+/* Question card base */
+.question-card {
+  background: #fafafa;
+  border-radius: 1rem;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* fade in for new questions */
+.question-card.animated {
+  animation: fadeInUp 0.25s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* phase: affirm – pop the question a little */
+.question-card.phase-affirm .question-text {
+  animation: question-pop 0.25s ease-out;
+}
+
+@keyframes question-pop {
+  from {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* phase: out – fade the whole card away */
+.question-card.phase-out {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* Scale labels */
+.scale-labels {
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+
+.question-card.phase-affirm .scale-labels,
+.question-card.phase-out .scale-labels {
+  opacity: 0;
+}
+
+/* Rating row and pills */
+.rating-scale-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  gap: 0.5rem;
+}
+
+.rating-scale-row.disabled {
+  pointer-events: none;
+}
+
+/* Base pill */
+.rating-pill {
+  flex: 1;
+  border-radius: 9999px;
+  border: 1px solid #d4d4d4;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: all 0.15s ease-out;
+}
+
+.rating-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Selected pill stays strong */
+.rating-pill.selected {
+  border-color: #4f46e5;
+  background: rgba(79, 70, 229, 0.12);
+  color: #312e81;
+}
+
+/* When in affirm/out phase, fade out the non-selected pills */
+.question-card.phase-affirm .rating-pill:not(.selected),
+.question-card.phase-out .rating-pill:not(.selected) {
+  opacity: 0;
+}
+
+/* Affirmation big text */
+.affirmation-wrapper {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.affirmation-big {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #16a34a; /* green, "good job" */
+  animation: affirmation-fade 0.4s ease-out;
+}
+
+@keyframes affirmation-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
