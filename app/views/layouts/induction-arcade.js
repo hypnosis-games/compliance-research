@@ -1,7 +1,7 @@
 
 export default function InductionArcadeLayout(state, emit) {
   const arcade = state.inductionArcade || {};
-  const { lastAffirmation = "", gameStarted, gameCompleted } = arcade;
+  const { lastAffirmation = "", phase = "intro1" } = arcade;
 
   let isTouch = true;
   if (typeof window !== "undefined") {
@@ -16,6 +16,11 @@ export default function InductionArcadeLayout(state, emit) {
     emit("inductionArcade/startGame");
   }
 
+  function onConfirmHeadphones(e) {
+    e.preventDefault();
+    emit("inductionArcade/confirmHeadphones");
+  }
+
   function onNext(e) {
     e.preventDefault();
     emit("navigateNextModule");
@@ -25,20 +30,25 @@ export default function InductionArcadeLayout(state, emit) {
     `This task measures focus and attention. ` +
     `Watch the screen and ${actionWord} on it when it has turned white.`;
 
+  const isIntro = phase === "intro1" || phase === "intro2";
+  const isGamePhase = phase === "game1" || phase === "game2";
+  const isComplete = phase === "complete";
+  const isHeadphones = phase === "headphones";
+
   const cardClasses = [
     "instruction-card",
-    !gameStarted && !gameCompleted ? "instruction-card--intro" : "",
-    gameCompleted ? "instruction-card--complete" : "",
+    isIntro ? "instruction-card--intro" : "",
+    isComplete ? "instruction-card--complete" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return html`
     <section class="layout induction-arcade-layout">
-      ${!gameStarted || gameCompleted
+      ${!isGamePhase
         ? html`
             <div class="${cardClasses}">
-              ${!gameStarted && !gameCompleted
+              ${isIntro
                 ? html`
                     <p class="instruction-main">
                       ${introText}
@@ -49,7 +59,20 @@ export default function InductionArcadeLayout(state, emit) {
                   `
                 : ""}
 
-              ${gameCompleted
+              ${isHeadphones
+                ? html`
+                    <p class="instruction-main">
+                      During the following tasks we will be studying the
+                      impact of binaurl beats on your focus and attention.
+                      Please use headphones for the next task.
+                    </p>
+                    <button class="primary-btn" onclick=${onConfirmHeadphones}>
+                      OK I am wearing headphones
+                    </button>
+                  `
+                : ""}
+
+              ${isComplete
                 ? html`
                     <p class="instruction-main">
                       Nice work. You have completed this task.
@@ -63,7 +86,7 @@ export default function InductionArcadeLayout(state, emit) {
           `
         : ""}
 
-      ${lastAffirmation && gameStarted && !gameCompleted
+      ${lastAffirmation && isGamePhase
         ? html`
             <div class="induction-arcade-affirmation-floating">
               <p class="induction-arcade-affirmation">

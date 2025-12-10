@@ -16,8 +16,7 @@ function pickRandom(arr) {
 export default function inductionArcadeStore(state, emitter) {
   state.inductionArcade = state.inductionArcade || {
     active: false,
-    gameStarted: false,
-    gameCompleted: false,
+    phase: "intro1",
     env: {
       depthLevel: 0,
       spiralIntensity: 0.2,
@@ -61,8 +60,9 @@ export default function inductionArcadeStore(state, emitter) {
     }
 
     if (type === "minigame/complete") {
-      state.inductionArcade.gameCompleted = true;
-      state.inductionArcade.gameStarted = false;
+      state.inductionArcade.phase =
+        state.inductionArcade.phase === "game1" ? "headphones" : "complete";
+      state.inductionArcade.lastAffirmation = "";
       emitter.emit("render");
     }
   });
@@ -71,8 +71,7 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/enter", () => {
     if (state.inductionArcade.active) return;
     state.inductionArcade.active = true;
-    state.inductionArcade.gameStarted = false;
-    state.inductionArcade.gameCompleted = false;
+    state.inductionArcade.phase = "intro1";
     state.inductionArcade.lastAffirmation = "";
 
     // make sure scene exists and is in idle
@@ -86,8 +85,7 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/exit", () => {
     if (!state.inductionArcade.active) return;
     state.inductionArcade.active = false;
-    state.inductionArcade.gameStarted = false;
-    state.inductionArcade.gameCompleted = false;
+    state.inductionArcade.phase = "intro1";
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
@@ -98,8 +96,9 @@ export default function inductionArcadeStore(state, emitter) {
 
   // user presses "I am ready to begin"
   emitter.on("inductionArcade/startGame", () => {
-    state.inductionArcade.gameStarted = true;
-    state.inductionArcade.gameCompleted = false;
+    const nextPhase =
+      state.inductionArcade.phase === "intro1" ? "game1" : "game2";
+    state.inductionArcade.phase = nextPhase;
     state.inductionArcade.lastAffirmation = "";
 
     // reset env if you want
@@ -113,6 +112,17 @@ export default function inductionArcadeStore(state, emitter) {
       scene.setMode("inductionArcade", {
         // later: minigame id config etc
       });
+    });
+
+    emitter.emit("render");
+  });
+
+  emitter.on("inductionArcade/confirmHeadphones", () => {
+    state.inductionArcade.phase = "intro2";
+    state.inductionArcade.lastAffirmation = "";
+
+    onArcadeReady((scene) => {
+      scene.setMode("idle");
     });
 
     emitter.emit("render");
