@@ -7,7 +7,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.externalEventHandler = null;
     this.currentMinigame = null;
     this.spiralTween = null;
-    this.sequenceStage = 0;
   }
 
   preload() {}
@@ -22,9 +21,13 @@ export default class InductionArcadeScene extends Phaser.Scene {
     console.log("InductionArcadeScene created");
   }
 
+  // ----------------- Spiral / background -----------------
+
   createIdleBackground() {
     // Simple black bg; spiral is handled by postFX
-    this.bgLayer.removeAll(true);
+    if (this.bgLayer) {
+      this.bgLayer.removeAll(true);
+    }
 
     const g = this.add.graphics();
     g.fillStyle(0x000000, 1);
@@ -83,6 +86,8 @@ export default class InductionArcadeScene extends Phaser.Scene {
     }
   }
 
+  // ----------------- Mode + arcade lifecycle -----------------
+
   setMode(mode, config = {}) {
     if (this.mode === mode) return;
     this.mode = mode;
@@ -99,7 +104,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
     }
   }
 
-  startArcade(config) {
+  startArcade(config = {}) {
     const {
       spiralOpacity = 0.2,
       spiralFadeIn = false,
@@ -116,8 +121,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     } else {
       this.setSpiralOpacity(spiralOpacity, { duration: 0 });
     }
-
-    this.sequenceStage = 0;
 
     if (autoStart) {
       this.startMinigame(initialGame, { final });
@@ -187,7 +190,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.clearCurrentMinigame();
 
     if (!final) {
-      this.sequenceStage += 1;
+      // Little camera thump between chained minigames
       this.tweens.add({
         targets: this.cameras.main,
         zoom: 1.015,
@@ -197,6 +200,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
       });
       return;
     }
+
     this.setMode("idle");
   }
 
@@ -213,6 +217,8 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 }
 
+// ----------------- Minigame: TapWhenWhite -----------------
+
 class TapWhenWhiteGame {
   constructor(scene, { onComplete, onSuccess }) {
     this.scene = scene;
@@ -225,7 +231,6 @@ class TapWhenWhiteGame {
 
     const { width, height } = scene.scale;
 
-    // White overlay whose alpha we pulse 0 → 1
     this.whiteOverlay = scene.add.rectangle(
       width / 2,
       height / 2,
@@ -257,7 +262,7 @@ class TapWhenWhiteGame {
       },
     });
 
-    this.pointerHandler = (pointer) => this.handleTap(pointer);
+    this.pointerHandler = () => this.handleTap();
     scene.input.on("pointerdown", this.pointerHandler);
   }
 
@@ -312,8 +317,6 @@ class TapWhenWhiteGame {
     }
   }
 
-  update(time, delta) {}
-
   destroy() {
     this.isActive = false;
     if (this.tween) this.tween.stop();
@@ -323,6 +326,8 @@ class TapWhenWhiteGame {
     if (this.whiteOverlay) this.whiteOverlay.destroy();
   }
 }
+
+// ----------------- Minigame: FollowTheFade -----------------
 
 class FollowTheFadeGame {
   constructor(scene, { onComplete, onSuccess }) {
@@ -335,6 +340,7 @@ class FollowTheFadeGame {
     this.isActive = true;
 
     const { width, height } = scene.scale;
+
     this.dot = scene.add.circle(width / 2, height / 2, 26, 0xffffff, 1);
     this.dot.setAlpha(0.12);
     scene.gameLayer.add(this.dot);
@@ -464,8 +470,6 @@ class FollowTheFadeGame {
       });
     }
   }
-
-  update(time, delta) {}
 
   destroy() {
     this.isActive = false;
