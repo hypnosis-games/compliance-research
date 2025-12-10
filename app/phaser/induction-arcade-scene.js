@@ -8,7 +8,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.currentMinigame = null;
     this.spiralOpacity = .5;
     this.spiralTween = null;
-    this.spiralQuad = null;
   }
 
   preload() {}
@@ -38,17 +37,31 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     const pipeline = this.getSpiralPipeline();
     if (pipeline) {
-      pipeline.setOpacity(.5);
+      pipeline.setOverlay(.5);
     }
   }
 
   getSpiralPipeline() {
-    if (!this.game || !this.game.renderer || !this.game.renderer.pipelines) {
+    if (!this.cameras || !this.cameras.main) {
       return null;
     }
-    const pipeline = this.game.renderer.pipelines.get("SpiralPipeline");
-    console.log("Retrieved SpiralPipeline:", pipeline);
-    return pipeline;
+
+    const cam = this.cameras.main;
+    let pipeline = cam.getPostPipeline("SpiralPostFX");
+
+    if (Array.isArray(pipeline)) {
+      pipeline = pipeline[0];
+    }
+
+    if (!pipeline) {
+      cam.setPostPipeline("SpiralPostFX");
+      pipeline = cam.getPostPipeline("SpiralPostFX");
+      if (Array.isArray(pipeline)) {
+        pipeline = pipeline[0];
+      }
+    }
+
+    return pipeline || null;
   }
 
   setSpiralOpacity(targetOpacity, { duration = 0 } = {}) {
@@ -65,16 +78,16 @@ export default class InductionArcadeScene extends Phaser.Scene {
     if (duration > 0) {
       this.spiralTween = this.tweens.add({
         targets: pipeline,
-        opacity: clamped,
+        overlay: clamped,
         duration,
         ease: "Sine.easeInOut",
         onComplete: () => {
-          pipeline.setOpacity(clamped);
+          pipeline.setOverlay(clamped);
           this.spiralTween = null;
         },
       });
     } else {
-      pipeline.setOpacity(clamped);
+      pipeline.setOverlay(clamped);
     }
 
     this.spiralOpacity = clamped;
@@ -89,26 +102,13 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.bgLayer.add(g);
 
     const pipeline = this.getSpiralPipeline();
-    this.spiralQuad = this.add.rectangle(
-      this.scale.width / 2,
-      this.scale.height / 2,
-      this.scale.width,
-      this.scale.height,
-      0xffffff,
-      1
-    );
-
     if (pipeline) {
-      this.spiralQuad.setPipeline("SpiralPipeline");
-      this.setSpiralOpacity(startInvisible ? 0 : opacity);
+      pipeline.setOverlay(startInvisible ? 0 : opacity);
 
       if (startInvisible && opacity > 0) {
         this.setSpiralOpacity(opacity, { duration: fadeDuration });
       }
-    } else {
-      this.spiralQuad.setAlpha(0);
     }
-    this.bgLayer.add(this.spiralQuad);
   }
 
   setMode(mode, config = {}) {

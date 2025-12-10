@@ -1,6 +1,6 @@
 // phaser/induction-arcade-game.js
 import InductionArcadeScene from "./induction-arcade-scene.js";
-import SpiralPipeline from "./spiral-pipeline.js";
+import SpiralPostFXPipeline from "./spiral-postfx-pipeline.js";
 
 let arcadeGame = null;
 let arcadeScene = null;
@@ -57,7 +57,7 @@ export function initArcadeGame({ onGameEvent } = {}) {
     scale: {
       mode: Phaser.Scale.NONE,
     },
-    pipeline: { SpiralPipeline },
+    pipeline: { SpiralPostFXPipeline },
     scene: [InductionArcadeScene],
   };
 
