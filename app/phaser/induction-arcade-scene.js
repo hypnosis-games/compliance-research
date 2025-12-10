@@ -339,11 +339,11 @@ class FollowTheFadeGame {
     this.dot.setAlpha(0.12);
     scene.gameLayer.add(this.dot);
 
-    this.threshold = 0.65;
+    this.threshold = 0.72;
     this.minAlpha = 0.08;
     this.maxAlpha = 1;
-    this.brightDuration = 1700;
-    this.ghostChance = 0.12;
+    this.brightDuration = 1500;
+    this.ghostChance = 0.18;
     this.canScore = false;
     this.lastAlpha = 0;
 
@@ -363,7 +363,7 @@ class FollowTheFadeGame {
     const ghosting = Math.random() < this.ghostChance;
 
     const activeDuration = ghosting
-      ? Math.max(600, this.brightDuration * 0.7)
+      ? Math.max(450, this.brightDuration * 0.65)
       : this.brightDuration;
     const targetAlpha = ghosting ? Math.min(this.maxAlpha, 0.88) : this.maxAlpha;
 
@@ -372,7 +372,7 @@ class FollowTheFadeGame {
       targets: this.dot,
       x: targetX,
       y: targetY,
-      duration: Math.max(520, activeDuration * 0.9),
+      duration: Math.max(280, activeDuration * 0.8),
       ease: "Sine.easeInOut",
     });
 
@@ -445,9 +445,9 @@ class FollowTheFadeGame {
   }
 
   bumpDifficulty() {
-    this.brightDuration = Math.max(900, this.brightDuration * 0.96);
-    this.threshold = Math.min(0.82, this.threshold + 0.008);
-    this.ghostChance = Math.min(0.25, this.ghostChance + 0.008);
+    this.brightDuration = Math.max(620, this.brightDuration * 0.93);
+    this.threshold = Math.min(0.88, this.threshold + 0.01);
+    this.ghostChance = Math.min(0.35, this.ghostChance + 0.01);
   }
 
   finishGame() {
