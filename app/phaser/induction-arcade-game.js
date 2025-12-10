@@ -6,6 +6,8 @@ let arcadeGame = null;
 let arcadeScene = null;
 let readyCallbacks = [];
 
+// ----------------- Sizing helpers -----------------
+
 function calculateGameDimensions() {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
@@ -37,6 +39,8 @@ function resizeCanvas(game) {
   }
 }
 
+// ----------------- Arcade init / accessors -----------------
+
 export function initArcadeGame({ onGameEvent } = {}) {
   if (arcadeGame) {
     // already created
@@ -57,7 +61,10 @@ export function initArcadeGame({ onGameEvent } = {}) {
     scale: {
       mode: Phaser.Scale.NONE,
     },
-    pipeline: { SpiralPostFX: SpiralPostFXPipeline },
+    // Register the spiral as a PostFX pipeline so the scene can use camera.setPostPipeline("SpiralPostFX")
+    pipeline: {
+      SpiralPostFX: SpiralPostFXPipeline,
+    },
     scene: [InductionArcadeScene],
   };
 
