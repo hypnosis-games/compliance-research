@@ -65,7 +65,7 @@ export default function inductionArcadeStore(state, emitter) {
       state.inductionArcade.env = {
         ...state.inductionArcade.env,
         depthLevel: newDepth,
-        spiralIntensity: BASE_SPIRAL_INTENSITY + newDepth * 0.8,
+        spiralIntensity: BASE_SPIRAL_INTENSITY + newDepth * 0.2,
         beatIntensity: 0.3 + newDepth * 0.5,
       };
 
