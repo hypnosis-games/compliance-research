@@ -1,5 +1,4 @@
 .pretest-container {
-  max-width: 480px;
   margin: 0 auto;
 }
 
@@ -144,10 +143,7 @@
 }
 
 /* Container for survey content */
-.pretest-container {
-  width: 100%;
-  max-width: 460px;
-}
+
 
 /* Question text */
 .pretest-question-text {
@@ -194,15 +190,3 @@
   color: #6b7280;
 }
 
-/* Desktop / larger screens: allow a *bit* more width and add subtle gradient */
-@media (min-width: 900px) {
-  #app-wrapper {
-    padding: 3rem 1.5rem;
-    background: radial-gradient(circle at top, #f9fafb 0, #e5e7eb 55%, #d1d5db 100%);
-  }
-
-  .screen-shell,
-  .pretest-container {
-    max-width: 540px;
-  }
-}
