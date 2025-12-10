@@ -1,11 +1,98 @@
 @import './app/views/styles/survey-styles.css';
+/* Make body fill viewport and use a calm, light background */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  background: #f7f8fa;
+  color: #111827;
+}
+
+/* Phaser canvas layer */
 #game {
   position: fixed;
   inset: 0;
   z-index: 0;
 }
 
-#app {
+/* Choo app layer, centered, over the game */
+#app-wrapper {
   position: relative;
   z-index: 1;
+
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 2rem 1rem; /* mobile-first padding */
 }
+
+/* Outer screen shell: keeps everything centered & constrained */
+.screen-shell {
+  width: 100%;
+  max-width: 460px;          /* mobile-first width cap */
+}
+
+/* The main card that holds content */
+.screen-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* For slightly larger surveying content */
+.screen-card--tall {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Optional subtle heading style */
+.screen-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #111827;
+}
+
+.screen-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 1.25rem 0;
+}
+
+/* Buttons */
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  min-width: 8rem;
+
+  border-radius: 9999px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  background: #1e3a8a;
+  color: #ffffff;
+
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out,
+    background 0.12s ease-out;
+}
+
+.primary-button:hover,
+.primary-button:focus-visible {
+  outline: none;
+  background: #1d4ed8;
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+    

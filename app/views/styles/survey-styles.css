@@ -142,3 +142,67 @@
     transform: translateY(0);
   }
 }
+
+/* Container for survey content */
+.pretest-container {
+  width: 100%;
+  max-width: 460px;
+}
+
+/* Question text */
+.pretest-question-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+/* Put Likert row in a clean column */
+.pretest-likert-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Individual option row (radio + label) – mobile-friendly */
+.pretest-likert-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Radio input sizing */
+.pretest-likert-option input[type="radio"] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* Labels */
+.pretest-likert-label {
+  font-size: 0.95rem;
+}
+
+/* Page indicator / subtle header */
+.pretest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.pretest-page-indicator {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Desktop / larger screens: allow a *bit* more width and add subtle gradient */
+@media (min-width: 900px) {
+  #app-wrapper {
+    padding: 3rem 1.5rem;
+    background: radial-gradient(circle at top, #f9fafb 0, #e5e7eb 55%, #d1d5db 100%);
+  }
+
+  .screen-shell,
+  .pretest-container {
+    max-width: 540px;
+  }
+}

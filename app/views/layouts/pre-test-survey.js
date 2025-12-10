@@ -48,7 +48,6 @@ export default function PreTestSurvey(state, emit) {
   const completion = Math.round((answeredCount / totalQuestions) * 100);
 
   function handleAnswer(value) {
-    // ignore if we're in the middle of an animation
     if (animPhase !== "idle") return;
 
     const numeric = Number(value);
@@ -61,7 +60,6 @@ export default function PreTestSurvey(state, emit) {
     const fullAffirmation = isPraise
       ? pickRandom(praiseAffirmations)
       : pickRandom(neutralAffirmations);
-
 
     const nextIndex = currentIndex + 1;
     const isLast = nextIndex >= totalQuestions;
@@ -85,7 +83,6 @@ export default function PreTestSurvey(state, emit) {
     // Phase 3: move to next question or next module
     window.setTimeout(() => {
       if (isLast) {
-        // small reset then navigate
         emit("preTestSurvey/update", {
           animPhase: "idle",
           lastAffirmation: "",
@@ -121,79 +118,80 @@ export default function PreTestSurvey(state, emit) {
     selectedQuestionId === question.id ? selectedValue : null;
 
   return html`
-    <div class="pa4 sans-serif bg-white dark-gray pretest-container">
-      <div class="flex items-center justify-between mb3">
-        <div>
-          <h1 class="f2 mb1">Pre-Test Survey</h1>
-          <p class="f6 gray mt0">
-            Question ${currentIndex + 1} of ${totalQuestions}
-          </p>
-        </div>
-        <div class="tr">
-          <div class="progress-bg">
-            <div
-              class="progress-bar"
-              style="width: ${completion}%;"
-            ></div>
+    <div class="screen-shell pretest-container">
+      <div class="screen-card screen-card--tall">
+        <div class="flex items-center justify-between mb3">
+          <div>
+            <h1 class="screen-title mb1">Pre-Test Survey</h1>
+            <p class="f6 gray mt0">
+              Question ${currentIndex + 1} of ${totalQuestions}
+            </p>
           </div>
-          <span class="f7 gray mt1 db">
-            ${completion}% complete
-          </span>
+          <div class="tr">
+            <div class="progress-bg">
+              <div
+                class="progress-bar"
+                style="width: ${completion}%;"
+              ></div>
+            </div>
+            <span class="f7 gray mt1 db">
+              ${completion}% complete
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div class="mb3">
-        ${instructions.map(
-          (line) => html`<p class="lh-copy mv2 f6 gray">${line}</p>`
-        )}
-      </div>
+        <div class="mb3">
+          ${instructions.map(
+            (line) => html`<p class="lh-copy mv2 f6 gray">${line}</p>`
+          )}
+        </div>
 
-      <div class="${cardClasses}">
-        <p class="f4 mb3 question-text">
-          ${question.text}
-        </p>
+        <div class="${cardClasses}">
+          <p class="f4 mb3 question-text">
+            ${question.text}
+          </p>
 
-        ${showScale
-          ? html`
-              <div class="flex justify-between mb2 scale-labels">
-                <span class="f6 gray">
-                  ${likertLabels[1] || "1 - Strongly disagree"}
-                </span>
-                <span class="f6 gray">
-                  ${likertLabels[5] || "5 - Strongly agree"}
-                </span>
-              </div>
+          ${showScale
+            ? html`
+                <div class="flex justify-between mb2 scale-labels">
+                  <span class="f6 gray">
+                    ${likertLabels[1] || "1 - Strongly disagree"}
+                  </span>
+                  <span class="f6 gray">
+                    ${likertLabels[5] || "5 - Strongly agree"}
+                  </span>
+                </div>
 
-              <div class="rating-scale-row ${animPhase !== "idle"
-                ? "disabled"
-                : ""}">
-                ${likertOptions.map((option) => {
-                  const isSelected = selectedForThisQuestion === option;
-                  return html`
-                    <button
-                      type="button"
-                      class="rating-pill ${isSelected ? "selected" : ""}"
-                      onclick=${() => handleAnswer(option)}
-                      aria-label="${likertLabels[option] || option}"
-                    >
-                      ${option}
-                    </button>
-                  `;
-                })}
-              </div>
-            `
-          : html`
-              <div class="affirmation-wrapper">
-                <p class="affirmation-big">
-                  ${lastAffirmation || "Good."}
-                </p>
-              </div>
-            `}
-
-        ${showAffirmation && showScale
-          ? null
-          : null}
+                <div
+                  class="rating-scale-row ${animPhase !== "idle"
+                    ? "disabled"
+                    : ""}"
+                >
+                  ${likertOptions.map((option) => {
+                    const isSelected = selectedForThisQuestion === option;
+                    return html`
+                      <button
+                        type="button"
+                        class="rating-pill ${isSelected ? "selected" : ""}"
+                        onclick=${() => handleAnswer(option)}
+                        aria-label="${likertLabels[option] || option}"
+                      >
+                        ${option}
+                      </button>
+                    `;
+                  })}
+                </div>
+              `
+            : html`
+                <div class="affirmation-wrapper">
+                  <p class="affirmation-big">
+                    ${lastAffirmation || "Good."}
+                  </p>
+                </div>
+              `}
+        </div>
       </div>
     </div>
   `;
 }
+

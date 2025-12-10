@@ -12,7 +12,6 @@ export default function PersonalInfoScreen(state, emit) {
       age: Number(form.age.value),
       consentGiven: form.consent.checked,
     });
-    emit("breathTraining/resetInstructions");
     emit("navigateToModule", "pre-test-survey");
   }
 
