@@ -34,7 +34,7 @@ export default function store(state, emitter) {
 
   emitter.on("navigateToModule", (moduleName) => {
     const target = layoutsDictionary[moduleName] ? moduleName : state.startModule;
-    emitter.emit("pushState", `/research-study#${target}`);
+    emitter.emit("pushState", `#${target}`);
   });
 
   emitter.on("navigateNextModule", () => {
