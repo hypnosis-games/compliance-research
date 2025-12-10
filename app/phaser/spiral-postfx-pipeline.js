@@ -28,9 +28,9 @@ export default class SpiralPostFXPipeline extends Phaser.Renderer.WebGL
           float r = length(p);
           float angle = atan(p.y, p.x);
 
-          float arms  = 2.0;
+          float arms  = 4.0;
           float twist = 12.0;
-          float speed = 1.5;
+          float speed = 3.5;
 
           float theta = angle + r * twist - uTime * speed;
           float v = sin(theta * arms);
