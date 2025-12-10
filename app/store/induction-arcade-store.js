@@ -105,10 +105,15 @@ export default function inductionArcadeStore(state, emitter) {
     }
 
     if (type === "minigame/complete") {
-      state.inductionArcade.phase = "complete";
-      state.inductionArcade.lastAffirmation = "";
-      stopBinauralBeat();
-      resetBeatState(state);
+      const { final = true } = payload || {};
+
+      if (final) {
+        state.inductionArcade.phase = "complete";
+        state.inductionArcade.lastAffirmation = "";
+        stopBinauralBeat();
+        resetBeatState(state);
+      }
+
       emitter.emit("render");
     }
   });
