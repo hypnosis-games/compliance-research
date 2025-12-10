@@ -32,9 +32,8 @@ export default function InductionArcadeLayout(state, emit) {
   }
 
   const introText =
-    `This task has two focus rounds. ` +
-    `First, watch the whole screen pulse brighter and ${actionWord} when it crosses white. ` +
-    `Then, keep following a softly glowing dot as it fades in and out while it drifts around the screen.`;
+    `Settle in and get ready to focus. ` +
+    `We will guide you with simple instructions before each round.`;
 
   const tapInstructionText = `Watch the whole screen pulse brighter and ${
     actionWord
