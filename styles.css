@@ -1,1 +1,11 @@
 @import './app/views/styles/survey-styles.css';
+#game {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+}
