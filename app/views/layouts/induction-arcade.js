@@ -1,7 +1,7 @@
 
 export default function InductionArcadeLayout(state, emit) {
   const arcade = state.inductionArcade || {};
-  const { lastAffirmation = "", phase = "intro1" } = arcade;
+  const { lastAffirmation = "", phase = "headphones" } = arcade;
 
   let isTouch = true;
   if (typeof window !== "undefined") {
@@ -30,8 +30,8 @@ export default function InductionArcadeLayout(state, emit) {
     `This task measures focus and attention. ` +
     `Watch the screen and ${actionWord} on it when it has turned white.`;
 
-  const isIntro = phase === "intro1" || phase === "intro2";
-  const isGamePhase = phase === "game1" || phase === "game2";
+  const isIntro = phase === "intro";
+  const isGamePhase = phase === "game";
   const isComplete = phase === "complete";
   const isHeadphones = phase === "headphones";
 
