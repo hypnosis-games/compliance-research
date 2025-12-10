@@ -104,6 +104,9 @@ export default class InductionArcadeScene extends Phaser.Scene {
       spiralOpacity = 0.2,
       spiralFadeIn = false,
       spiralFadeDuration = 1000,
+      initialGame = "tapWhenWhite",
+      autoStart = true,
+      final = false,
     } = config;
 
     // Set spiral level for the minigame
@@ -115,7 +118,23 @@ export default class InductionArcadeScene extends Phaser.Scene {
     }
 
     this.sequenceStage = 0;
-    this.startTapWhenWhite();
+
+    if (autoStart) {
+      this.startMinigame(initialGame, { final });
+    }
+  }
+
+  startMinigame(gameId, { final = false } = {}) {
+    if (!gameId) return;
+
+    if (gameId === "tapWhenWhite") {
+      this.startTapWhenWhite({ final });
+      return;
+    }
+
+    if (gameId === "followTheFade") {
+      this.startFollowTheFade({ final });
+    }
   }
 
   clearCurrentMinigame() {
@@ -128,12 +147,12 @@ export default class InductionArcadeScene extends Phaser.Scene {
     }
   }
 
-  startTapWhenWhite() {
+  startTapWhenWhite({ final = false } = {}) {
     this.clearCurrentMinigame();
 
     this.currentMinigame = new TapWhenWhiteGame(this, {
       onComplete: (result) => {
-        this.handleMinigameComplete("tapWhenWhite", result);
+        this.handleMinigameComplete("tapWhenWhite", result, { final });
       },
       onSuccess: (payload) => {
         this.handleMinigameSuccess("tapWhenWhite", payload);
@@ -141,12 +160,12 @@ export default class InductionArcadeScene extends Phaser.Scene {
     });
   }
 
-  startFollowTheFade() {
+  startFollowTheFade({ final = true } = {}) {
     this.clearCurrentMinigame();
 
     this.currentMinigame = new FollowTheFadeGame(this, {
       onComplete: (result) => {
-        this.handleMinigameComplete("followTheFade", result, { final: true });
+        this.handleMinigameComplete("followTheFade", result, { final });
       },
       onSuccess: (payload) => {
         this.handleMinigameSuccess("followTheFade", payload);
@@ -159,13 +178,16 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   handleMinigameComplete(id, result, { final = false } = {}) {
-    if (!final && id === "tapWhenWhite") {
-      this.emitGameEvent("minigame/complete", {
-        id,
-        ...result,
-        final,
-      });
-      this.sequenceStage = 1;
+    this.emitGameEvent("minigame/complete", {
+      id,
+      ...result,
+      final,
+    });
+
+    this.clearCurrentMinigame();
+
+    if (!final) {
+      this.sequenceStage += 1;
       this.tweens.add({
         targets: this.cameras.main,
         zoom: 1.015,
@@ -173,16 +195,8 @@ export default class InductionArcadeScene extends Phaser.Scene {
         duration: 280,
         ease: "Sine.easeInOut",
       });
-
-      this.time.delayedCall(500, () => this.startFollowTheFade());
       return;
     }
-
-    this.emitGameEvent("minigame/complete", {
-      id,
-      ...result,
-      final,
-    });
     this.setMode("idle");
   }
 
@@ -325,11 +339,11 @@ class FollowTheFadeGame {
     this.dot.setAlpha(0.12);
     scene.gameLayer.add(this.dot);
 
-    this.threshold = 0.72;
+    this.threshold = 0.65;
     this.minAlpha = 0.08;
     this.maxAlpha = 1;
-    this.brightDuration = 1500;
-    this.ghostChance = 0.18;
+    this.brightDuration = 1700;
+    this.ghostChance = 0.12;
     this.canScore = false;
     this.lastAlpha = 0;
 
@@ -349,7 +363,7 @@ class FollowTheFadeGame {
     const ghosting = Math.random() < this.ghostChance;
 
     const activeDuration = ghosting
-      ? Math.max(450, this.brightDuration * 0.65)
+      ? Math.max(600, this.brightDuration * 0.7)
       : this.brightDuration;
     const targetAlpha = ghosting ? Math.min(this.maxAlpha, 0.88) : this.maxAlpha;
 
@@ -358,7 +372,7 @@ class FollowTheFadeGame {
       targets: this.dot,
       x: targetX,
       y: targetY,
-      duration: Math.max(280, activeDuration * 0.8),
+      duration: Math.max(520, activeDuration * 0.9),
       ease: "Sine.easeInOut",
     });
 
@@ -431,9 +445,9 @@ class FollowTheFadeGame {
   }
 
   bumpDifficulty() {
-    this.brightDuration = Math.max(620, this.brightDuration * 0.93);
-    this.threshold = Math.min(0.88, this.threshold + 0.01);
-    this.ghostChance = Math.min(0.35, this.ghostChance + 0.01);
+    this.brightDuration = Math.max(900, this.brightDuration * 0.96);
+    this.threshold = Math.min(0.82, this.threshold + 0.008);
+    this.ghostChance = Math.min(0.25, this.ghostChance + 0.008);
   }
 
   finishGame() {
