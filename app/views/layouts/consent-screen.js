@@ -21,7 +21,7 @@ export default function ConsentScreen(state, emit) {
 
         <button
           class="primary-button"
-          onclick=${() => emit("navigateToModule", "personal-info")}
+          onclick=${() => emit("navigateToModule", "pre-test-survey")}
         >
           I consent
         </button>
