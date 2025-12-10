@@ -6,6 +6,9 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.mode = "idle"; // 'idle' | 'inductionArcade'
     this.externalEventHandler = null;
     this.currentMinigame = null;
+    this.spiralOpacity = 0;
+    this.spiralTween = null;
+    this.spiralQuad = null;
   }
 
   preload() {}
@@ -21,12 +24,91 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   createIdleBackground() {
+    if (this.spiralTween) {
+      this.spiralTween.stop();
+      this.spiralTween = null;
+    }
+
     this.bgLayer.removeAll(true);
 
     const g = this.add.graphics();
     g.fillStyle(0x000000, 1);
     g.fillRect(0, 0, this.scale.width, this.scale.height);
     this.bgLayer.add(g);
+
+    const pipeline = this.getSpiralPipeline();
+    if (pipeline) {
+      pipeline.setOpacity(0);
+    }
+  }
+
+  getSpiralPipeline() {
+    if (!this.game || !this.game.renderer || !this.game.renderer.pipelines) {
+      return null;
+    }
+
+    return this.game.renderer.pipelines.get("SpiralPipeline") || null;
+  }
+
+  setSpiralOpacity(targetOpacity, { duration = 0 } = {}) {
+    const pipeline = this.getSpiralPipeline();
+    if (!pipeline) return;
+
+    const clamped = Phaser.Math.Clamp(targetOpacity, 0, 1);
+
+    if (this.spiralTween) {
+      this.spiralTween.stop();
+      this.spiralTween = null;
+    }
+
+    if (duration > 0) {
+      this.spiralTween = this.tweens.add({
+        targets: pipeline,
+        opacity: clamped,
+        duration,
+        ease: "Sine.easeInOut",
+        onComplete: () => {
+          pipeline.setOpacity(clamped);
+          this.spiralTween = null;
+        },
+      });
+    } else {
+      pipeline.setOpacity(clamped);
+    }
+
+    this.spiralOpacity = clamped;
+  }
+
+  createSpiralBackground({ opacity = 0.6, startInvisible = false, fadeDuration = 1000 } = {}) {
+    this.bgLayer.removeAll(true);
+
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 1);
+    g.fillRect(0, 0, this.scale.width, this.scale.height);
+    this.bgLayer.add(g);
+
+    const pipeline = this.getSpiralPipeline();
+    this.spiralQuad = this.add.rectangle(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      this.scale.width,
+      this.scale.height,
+      0xffffff,
+      1
+    );
+
+    if (pipeline) {
+      this.spiralQuad.setPipeline("SpiralPipeline");
+      this.setSpiralOpacity(startInvisible ? 0 : opacity);
+
+      if (startInvisible && opacity > 0) {
+        this.setSpiralOpacity(opacity, { duration: fadeDuration });
+      }
+    } else {
+      this.spiralQuad.setAlpha(0);
+    }
+
+    this.bgLayer.add(this.spiralQuad);
   }
 
   setMode(mode, config = {}) {
@@ -50,6 +132,18 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   startArcade(config) {
+    const {
+      spiralOpacity = 0.6,
+      spiralFadeIn = false,
+      spiralFadeDuration = 1000,
+    } = config;
+
+    this.createSpiralBackground({
+      opacity: spiralOpacity,
+      startInvisible: spiralFadeIn,
+      fadeDuration: spiralFadeDuration,
+    });
+
     this.currentMinigame = new TapWhenWhiteGame(this, {
       onComplete: (result) => {
         this.emitGameEvent("minigame/complete", {

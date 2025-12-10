@@ -93,6 +93,14 @@ export default function inductionArcadeStore(state, emitter) {
         emitter.emit("render");
       }, 900);
 
+      onArcadeReady((scene) => {
+        if (scene.setSpiralOpacity) {
+          scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
+            duration: 600,
+          });
+        }
+      });
+
       emitter.emit("render");
     }
 
@@ -159,6 +167,9 @@ export default function inductionArcadeStore(state, emitter) {
     onArcadeReady((scene) => {
       scene.setMode("inductionArcade", {
         // later: minigame id config etc
+        spiralOpacity: state.inductionArcade.env.spiralIntensity,
+        spiralFadeIn: true,
+        spiralFadeDuration: 1200,
       });
     });
 
