@@ -27,8 +27,9 @@ export default function InductionArcadeLayout(state, emit) {
   }
 
   const introText =
-    `This task measures focus and attention. ` +
-    `Watch the screen and ${actionWord} on it when it has turned white.`;
+    `This task has two focus rounds. ` +
+    `First, watch the whole screen pulse brighter and ${actionWord} when it crosses white. ` +
+    `Then, keep following a softly glowing dot as it fades in and out while it drifts around the screen.`;
 
   const isIntro = phase === "intro";
   const isGamePhase = phase === "game";
