@@ -1,7 +1,7 @@
-
 export default function InductionArcadeLayout(state, emit) {
   const arcade = state.inductionArcade || {};
-  const { lastAffirmation = "", phase = "headphones" } = arcade;
+  const { lastAffirmation = "", phase = "headphones", nextGameId } = arcade;
+  const gameOrder = arcade.gameOrder || [];
 
   let isTouch = true;
   if (typeof window !== "undefined") {
@@ -26,15 +26,36 @@ export default function InductionArcadeLayout(state, emit) {
     emit("navigateNextModule");
   }
 
+  function onBeginMinigame(e) {
+    e.preventDefault();
+    emit("inductionArcade/beginCurrentGame");
+  }
+
   const introText =
     `This task has two focus rounds. ` +
     `First, watch the whole screen pulse brighter and ${actionWord} when it crosses white. ` +
     `Then, keep following a softly glowing dot as it fades in and out while it drifts around the screen.`;
 
+  const tapInstructionText = `Watch the whole screen pulse brighter and ${
+    actionWord
+  } when the brightness crosses white. Keep a steady rhythm for ten good taps.`;
+
+  const followInstructionText =
+    `Stay with the softly glowing dot. ${
+      actionWord === "tap" ? "Tap" : "Click"
+    } as it brightens, even as it drifts around the screen.`;
+
   const isIntro = phase === "intro";
   const isGamePhase = phase === "game";
   const isComplete = phase === "complete";
   const isHeadphones = phase === "headphones";
+  const isInstructionPhase = phase === "instructions";
+  const isTapInstruction = isInstructionPhase && nextGameId === "tapWhenWhite";
+  const nextRoundNumber =
+    nextGameId && gameOrder.length
+      ? gameOrder.indexOf(nextGameId) + 1
+      : null;
+  const roundLabel = nextRoundNumber ? `round ${nextRoundNumber}` : "this round";
 
   const cardClasses = [
     "instruction-card",
@@ -80,6 +101,17 @@ export default function InductionArcadeLayout(state, emit) {
                     </p>
                     <button class="primary-btn" onclick=${onNext}>
                       Continue to next part
+                    </button>
+                  `
+                : ""}
+
+                  ${isInstructionPhase
+                ? html`
+                    <p class="instruction-main">
+                      ${isTapInstruction ? tapInstructionText : followInstructionText}
+                    </p>
+                    <button class="primary-btn" onclick=${onBeginMinigame}>
+                      Start ${roundLabel}
                     </button>
                   `
                 : ""}
