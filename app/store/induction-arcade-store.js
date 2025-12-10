@@ -1,5 +1,12 @@
 // store/induction-arcade-store.js
 import { getArcadeScene, onArcadeReady } from "../phaser/induction-arcade-game.js";
+import {
+  DEFAULT_LEFT_FREQUENCY,
+  DEFAULT_RIGHT_FREQUENCY,
+  startBinauralBeat,
+  stopBinauralBeat,
+  updateBinauralBeat,
+} from "../audio/binaural-beat.js";
 
 const affirmations = [
   "So focused.",
@@ -13,6 +20,22 @@ const affirmations = [
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+
+function calculateBeatFrequencies(depthLevel = 0) {
+  const adjustment = depthLevel * 2;
+  return {
+    leftFrequency: DEFAULT_LEFT_FREQUENCY + adjustment,
+    rightFrequency: DEFAULT_RIGHT_FREQUENCY + adjustment,
+  };
+}
+
+function resetBeatState(state) {
+  state.inductionArcade.binauralBeat = {
+    leftFrequency: DEFAULT_LEFT_FREQUENCY,
+    rightFrequency: DEFAULT_RIGHT_FREQUENCY,
+    playing: false,
+  };
+}
 export default function inductionArcadeStore(state, emitter) {
   state.inductionArcade = state.inductionArcade || {
     active: false,
@@ -24,6 +47,11 @@ export default function inductionArcadeStore(state, emitter) {
     },
     lastAffirmation: "",
     affirmationTimeoutId: null,
+    binauralBeat: {
+      leftFrequency: DEFAULT_LEFT_FREQUENCY,
+      rightFrequency: DEFAULT_RIGHT_FREQUENCY,
+      playing: false,
+    },
   };
 
   emitter.on("inductionArcade/gameEvent", (evt) => {
@@ -40,6 +68,15 @@ export default function inductionArcadeStore(state, emitter) {
         spiralIntensity: 0.2 + newDepth * 0.8,
         beatIntensity: 0.3 + newDepth * 0.5,
       };
+
+      if (state.inductionArcade.binauralBeat.playing) {
+        const frequencies = calculateBeatFrequencies(newDepth);
+        state.inductionArcade.binauralBeat = {
+          ...state.inductionArcade.binauralBeat,
+          ...frequencies,
+        };
+        updateBinauralBeat(frequencies);
+      }
 
       // set a new affirmation
       state.inductionArcade.lastAffirmation = pickRandom(affirmations);
@@ -63,6 +100,8 @@ export default function inductionArcadeStore(state, emitter) {
       state.inductionArcade.phase =
         state.inductionArcade.phase === "game1" ? "headphones" : "complete";
       state.inductionArcade.lastAffirmation = "";
+      stopBinauralBeat();
+      resetBeatState(state);
       emitter.emit("render");
     }
   });
@@ -86,6 +125,8 @@ export default function inductionArcadeStore(state, emitter) {
     if (!state.inductionArcade.active) return;
     state.inductionArcade.active = false;
     state.inductionArcade.phase = "intro1";
+    stopBinauralBeat();
+    resetBeatState(state);
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
@@ -108,6 +149,19 @@ export default function inductionArcadeStore(state, emitter) {
       beatIntensity: 0.3,
     };
 
+    if (nextPhase === "game2") {
+      const frequencies = calculateBeatFrequencies(state.inductionArcade.env.depthLevel);
+      state.inductionArcade.binauralBeat = {
+        ...state.inductionArcade.binauralBeat,
+        ...frequencies,
+        playing: true,
+      };
+      startBinauralBeat(frequencies);
+    } else {
+      stopBinauralBeat();
+      resetBeatState(state);
+    }
+
     onArcadeReady((scene) => {
       scene.setMode("inductionArcade", {
         // later: minigame id config etc
@@ -120,6 +174,8 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/confirmHeadphones", () => {
     state.inductionArcade.phase = "intro2";
     state.inductionArcade.lastAffirmation = "";
+    stopBinauralBeat();
+    resetBeatState(state);
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
