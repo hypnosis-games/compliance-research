@@ -6,7 +6,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.mode = "idle"; // 'idle' | 'inductionArcade'
     this.externalEventHandler = null;
     this.currentMinigame = null;
-    this.spiralOpacity = 0;
+    this.spiralOpacity = .5;
     this.spiralTween = null;
     this.spiralQuad = null;
   }
@@ -38,7 +38,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     const pipeline = this.getSpiralPipeline();
     if (pipeline) {
-      pipeline.setOpacity(0);
+      pipeline.setOpacity(.5);
     }
   }
 
@@ -46,8 +46,9 @@ export default class InductionArcadeScene extends Phaser.Scene {
     if (!this.game || !this.game.renderer || !this.game.renderer.pipelines) {
       return null;
     }
-
-    return this.game.renderer.pipelines.get("SpiralPipeline") || null;
+    const pipeline = this.game.renderer.pipelines.get("SpiralPipeline");
+    console.log("Retrieved SpiralPipeline:", pipeline);
+    return pipeline;
   }
 
   setSpiralOpacity(targetOpacity, { duration = 0 } = {}) {
@@ -107,7 +108,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     } else {
       this.spiralQuad.setAlpha(0);
     }
-
     this.bgLayer.add(this.spiralQuad);
   }
 
@@ -133,7 +133,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
   startArcade(config) {
     const {
-      spiralOpacity = 0.6,
+      spiralOpacity = 0.2,
       spiralFadeIn = false,
       spiralFadeDuration = 1000,
     } = config;
@@ -186,16 +186,7 @@ class TapWhenWhiteGame {
 
     const { width, height } = scene.scale;
 
-    // Base black fill (just in case)
-    const bgBase = scene.add.rectangle(
-      width / 2,
-      height / 2,
-      width,
-      height,
-      0x000000,
-      1
-    );
-    scene.gameLayer.add(bgBase);
+
 
     // White overlay whose alpha we pulse 0 → 1
     this.whiteOverlay = scene.add.rectangle(

@@ -76,6 +76,7 @@ export function initArcadeGame({ onGameEvent } = {}) {
       readyCallbacks.forEach((cb) => cb(arcadeScene));
       readyCallbacks = [];
     }
+     
   });
 
   window.addEventListener("resize", () => resizeCanvas(arcadeGame));
