@@ -1,36 +1,30 @@
 // store/induction-arcade-store.js
 import { getArcadeScene, onArcadeReady } from "../phaser/induction-arcade-game.js";
 
-const neutralAffirmations = [
-  "Good.",
-  "Nice.",
-  "You’re doing well.",
-  "Next.",
-  "Keep going.",
-];
-
-const praiseAffirmations = [
+const affirmations = [
+  "So focused.",
   "Very good.",
-  "That’s right.",
-  "Excellent.",
-  "Perfect.",
-  "Exactly.",
-  "Nicely done.",
+  "So good.",
+  "Keep watching.",
+  "Nice.",
+  "Exactly right.",
 ];
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-
 export default function inductionArcadeStore(state, emitter) {
   state.inductionArcade = state.inductionArcade || {
     active: false,
+    gameStarted: false,
+    gameCompleted: false,
     env: {
       depthLevel: 0,
       spiralIntensity: 0.2,
       beatIntensity: 0.3,
     },
     lastAffirmation: "",
+    affirmationTimeoutId: null,
   };
 
   emitter.on("inductionArcade/gameEvent", (evt) => {
@@ -48,35 +42,42 @@ export default function inductionArcadeStore(state, emitter) {
         beatIntensity: 0.3 + newDepth * 0.5,
       };
 
-      state.inductionArcade.lastAffirmation =
-        newDepth > 0.4 ? pickRandom(praiseAffirmations) : pickRandom(neutralAffirmations);
+      // set a new affirmation
+      state.inductionArcade.lastAffirmation = pickRandom(affirmations);
+
+      // clear any previous hide-timer
+      if (state.inductionArcade.affirmationTimeoutId) {
+        clearTimeout(state.inductionArcade.affirmationTimeoutId);
+      }
+
+      // hide it again after ~900ms
+      state.inductionArcade.affirmationTimeoutId = setTimeout(() => {
+        state.inductionArcade.lastAffirmation = "";
+        state.inductionArcade.affirmationTimeoutId = null;
+        emitter.emit("render");
+      }, 900);
 
       emitter.emit("render");
-
-      const scene = getArcadeScene();
-      if (scene && scene.setEnv) {
-        scene.setEnv(state.inductionArcade.env);
-      }
     }
 
     if (type === "minigame/complete") {
-      console.log("Minigame complete:", payload);
-      // For now, just restart the arcade:
-      onArcadeReady((scene) => {
-        scene.setMode("inductionArcade");
-      });
+      state.inductionArcade.gameCompleted = true;
+      state.inductionArcade.gameStarted = false;
+      emitter.emit("render");
     }
   });
+
 
   emitter.on("inductionArcade/enter", () => {
     if (state.inductionArcade.active) return;
     state.inductionArcade.active = true;
+    state.inductionArcade.gameStarted = false;
+    state.inductionArcade.gameCompleted = false;
+    state.inductionArcade.lastAffirmation = "";
 
-    // no matter when this runs, the callback will fire once the scene is ready
+    // make sure scene exists and is in idle
     onArcadeReady((scene) => {
-      scene.setMode("inductionArcade", {
-        // future: mini-game config
-      });
+      scene.setMode("idle");
     });
 
     emitter.emit("render");
@@ -85,9 +86,33 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/exit", () => {
     if (!state.inductionArcade.active) return;
     state.inductionArcade.active = false;
+    state.inductionArcade.gameStarted = false;
+    state.inductionArcade.gameCompleted = false;
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
+    });
+
+    emitter.emit("render");
+  });
+
+  // user presses "I am ready to begin"
+  emitter.on("inductionArcade/startGame", () => {
+    state.inductionArcade.gameStarted = true;
+    state.inductionArcade.gameCompleted = false;
+    state.inductionArcade.lastAffirmation = "";
+
+    // reset env if you want
+    state.inductionArcade.env = {
+      depthLevel: 0,
+      spiralIntensity: 0.2,
+      beatIntensity: 0.3,
+    };
+
+    onArcadeReady((scene) => {
+      scene.setMode("inductionArcade", {
+        // later: minigame id config etc
+      });
     });
 
     emitter.emit("render");

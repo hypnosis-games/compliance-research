@@ -1,0 +1,129 @@
+/* Induction Arcade layout shell */
+.induction-arcade-layout {
+  position: absolute;      /* sit over the Phaser canvas */
+  inset: 0;
+  pointer-events: none;    /* taps go to the game by default */
+}
+
+/* Instruction card – same vibe as question-card, darker */
+.instruction-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 480px;
+  width: calc(100% - 2.5rem);
+  border-radius: 1rem;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: #f9fafb;
+  text-align: left;
+  backdrop-filter: blur(14px);
+  pointer-events: auto; /* intro/complete are clickable */
+  animation: fadeInUp 0.25s ease-out;
+}
+
+/* Intro vs complete (both centered) */
+.instruction-card--intro {
+  /* default centered settings already applied */
+}
+
+.instruction-card--complete {
+  /* same as intro; separate class in case you want different styling later */
+}
+
+/* Instruction text */
+.instruction-main {
+  margin: 0 0 0.9rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+/* Primary button */
+.induction-arcade-layout .primary-btn {
+  display: block;
+  margin: 0.6rem auto 0;
+  padding: 0.55rem 1.6rem;
+  border-radius: 9999px;
+  border: none;
+  background: linear-gradient(90deg, #4f46e5, #ec4899);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45);
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out,
+    filter 0.12s ease-out;
+  pointer-events: auto;
+}
+
+.induction-arcade-layout .primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.6);
+  filter: brightness(1.03);
+}
+
+.induction-arcade-layout .primary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.45);
+}
+.induction-arcade-affirmation-floating {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.induction-arcade-affirmation {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f9fafb;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  animation: arcadeAffirmInOut 0.9s ease-out;
+}
+
+@keyframes arcadeAffirmInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+
+/* replace fadeInUp with this on the card */
+.instruction-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* ... other styles ... */
+  animation: arcadeCardFadeIn 0.25s ease-out;
+}
+
+/* new keyframes */
+@keyframes arcadeCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%); /* slightly higher */
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

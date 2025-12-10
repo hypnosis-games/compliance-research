@@ -1,3 +1,5 @@
+// phaser/induction-arcade-scene.js (only the minigame class changed)
+
 export default class InductionArcadeScene extends Phaser.Scene {
   constructor() {
     super({ key: "InductionArcadeScene" });
@@ -14,8 +16,8 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     this.createIdleBackground();
 
-    // signal game is ready so initArcadeGame can grab the scene
     this.game.events.emit("ready");
+    console.log("InductionArcadeScene created");
   }
 
   createIdleBackground() {
@@ -31,7 +33,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     if (this.mode === mode) return;
     this.mode = mode;
 
-    // clear minigame objects
     if (this.currentMinigame && this.currentMinigame.destroy) {
       this.currentMinigame.destroy();
       this.currentMinigame = null;
@@ -49,21 +50,17 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   startArcade(config) {
-    // For now just start the first minigame.
-    this.currentMinigame = new TapWhenBrightGame(this, {
+    this.currentMinigame = new TapWhenWhiteGame(this, {
       onComplete: (result) => {
         this.emitGameEvent("minigame/complete", {
-          id: "tapWhenBright",
+          id: "tapWhenWhite",
           ...result,
         });
-
-        // Later: pick another minigame, or go idle, or loop.
-        // For now, just go idle so you can see lifecycle clearly.
         this.setMode("idle");
       },
       onSuccess: (payload) => {
         this.emitGameEvent("minigame/success", {
-          id: "tapWhenBright",
+          id: "tapWhenWhite",
           ...payload,
         });
       },
@@ -83,101 +80,81 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 }
 
-class TapWhenBrightGame {
+class TapWhenWhiteGame {
   constructor(scene, { onComplete, onSuccess }) {
     this.scene = scene;
     this.onComplete = onComplete;
     this.onSuccess = onSuccess;
 
     this.successCount = 0;
-    this.totalRounds = 0;
-    this.maxRounds = 6; // ~15–30s depending on timings
+    this.targetSuccesses = 10;
     this.isActive = true;
-    this.isBright = false;
-    this.hasRespondedThisRound = false;
 
     const { width, height } = scene.scale;
 
-    // background slightly not-black so it feels "gamey"
-    const bg = scene.add.rectangle(
+    // Base black fill (just in case)
+    const bgBase = scene.add.rectangle(
       width / 2,
       height / 2,
       width,
       height,
-      0x000010,
+      0x000000,
       1
     );
-    scene.gameLayer.add(bg);
+    scene.gameLayer.add(bgBase);
 
-    const size = Math.min(width, height) * 0.25;
-    this.square = scene.add.rectangle(
+    // White overlay whose alpha we pulse 0 → 1
+    this.whiteOverlay = scene.add.rectangle(
       width / 2,
       height / 2,
-      size,
-      size,
+      width,
+      height,
       0xffffff,
       1
     );
-    this.square.setAlpha(0.2); // start dim
-    this.square.setInteractive({ useHandCursor: true });
-    scene.gameLayer.add(this.square);
+    this.whiteOverlay.setAlpha(0);
+    scene.gameLayer.add(this.whiteOverlay);
 
-    this.pointerHandler = () => this.handleTap();
-    this.square.on("pointerdown", this.pointerHandler);
+    this.threshold = 0.7;
+    this.canScore = false;
+    this.lastAlpha = 0;
 
-    this.startNextRound();
-  }
-
-  startNextRound() {
-    if (!this.isActive) return;
-
-    this.totalRounds++;
-    this.hasRespondedThisRound = false;
-    this.isBright = false;
-
-    // random wait before brightening
-    const waitMs = Phaser.Math.Between(600, 1600);
-    const brightenMs = Phaser.Math.Between(800, 1400);
-
-    this.square.setAlpha(0.2);
-
-    this.scene.time.delayedCall(waitMs, () => {
-      if (!this.isActive) return;
-
-      // tween from dim → bright
-      this.scene.tweens.add({
-        targets: this.square,
-        alpha: { from: 0.2, to: 1.0 },
-        duration: brightenMs,
-        onUpdate: (tween, target) => {
-          // consider it "bright enough to tap" past 0.7 alpha
-          if (!this.isBright && target.alpha >= 0.7) {
-            this.isBright = true;
-          }
-        },
-        onComplete: () => {
-          // give them a short window to tap after full bright
-          this.scene.time.delayedCall(500, () => {
-            if (!this.isActive) return;
-            this.endRound();
-          });
-        },
-      });
+    this.tween = scene.tweens.add({
+      targets: this.whiteOverlay,
+      alpha: { from: 0, to: 1 },
+      duration: 1500,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+      onUpdate: (tween, target) => {
+        const a = target.alpha;
+        // allow one score per "bright" phase
+        if (this.lastAlpha < this.threshold && a >= this.threshold) {
+          this.canScore = true;
+        }
+        this.lastAlpha = a;
+      },
     });
+
+    // Tap/click anywhere
+    this.pointerHandler = (pointer) => this.handleTap(pointer);
+    scene.input.on("pointerdown", this.pointerHandler);
   }
 
   handleTap() {
-    if (!this.isActive || this.hasRespondedThisRound) return;
+    if (!this.isActive) return;
 
-    this.hasRespondedThisRound = true;
+    const brightness = this.whiteOverlay.alpha;
 
-    if (this.isBright) {
+    if (brightness >= this.threshold && this.canScore) {
+      this.canScore = false;
       this.successCount++;
-      // small visual feedback
+
+      // Tiny pulse for feedback
       this.scene.tweens.add({
-        targets: this.square,
-        scaleX: 1.1,
-        scaleY: 1.1,
+        targets: this.whiteOverlay,
+        scaleX: 1.02,
+        scaleY: 1.02,
         yoyo: true,
         duration: 120,
       });
@@ -185,31 +162,21 @@ class TapWhenBrightGame {
       if (this.onSuccess) {
         this.onSuccess({
           successCount: this.successCount,
-          totalRounds: this.totalRounds,
+          targetSuccesses: this.targetSuccesses,
         });
       }
+
+      if (this.successCount >= this.targetSuccesses) {
+        this.finishGame();
+      }
     } else {
-      // optionally do a "too early" pulse
+      // optional "off-beat" feedback – very subtle
       this.scene.tweens.add({
-        targets: this.square,
-        angle: { from: -5, to: 5 },
+        targets: this.whiteOverlay,
+        alpha: { from: brightness, to: Math.max(0, brightness - 0.2) },
         yoyo: true,
-        repeat: 1,
-        duration: 80,
-        onComplete: () => {
-          this.square.setAngle(0);
-        },
+        duration: 90,
       });
-    }
-  }
-
-  endRound() {
-    if (!this.isActive) return;
-
-    if (this.totalRounds >= this.maxRounds) {
-      this.finishGame();
-    } else {
-      this.startNextRound();
     }
   }
 
@@ -217,24 +184,28 @@ class TapWhenBrightGame {
     if (!this.isActive) return;
     this.isActive = false;
 
+    if (this.tween) {
+      this.tween.stop();
+    }
+
     if (this.onComplete) {
       this.onComplete({
         successCount: this.successCount,
-        totalRounds: this.totalRounds,
+        targetSuccesses: this.targetSuccesses,
       });
     }
   }
 
   update(time, delta) {
-    // nothing needed yet, but hook is here
+    // nothing per-frame for now
   }
 
   destroy() {
     this.isActive = false;
-    if (this.square && this.pointerHandler) {
-      this.square.off("pointerdown", this.pointerHandler);
+    if (this.tween) this.tween.stop();
+    if (this.scene && this.pointerHandler) {
+      this.scene.input.off("pointerdown", this.pointerHandler);
     }
-    if (this.square) this.square.destroy();
+    if (this.whiteOverlay) this.whiteOverlay.destroy();
   }
 }
-
