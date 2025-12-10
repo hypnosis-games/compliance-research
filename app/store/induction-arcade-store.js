@@ -204,6 +204,16 @@ export default function inductionArcadeStore(state, emitter) {
         state.inductionArcade.phase = nextGame ? "instructions" : "complete";
       }
 
+      if (!final) {
+        onArcadeReady((scene) => {
+          if (scene.setSpiralOpacity) {
+            scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
+              duration: 800,
+            });
+          }
+        });
+      }
+
       emitter.emit("render");
     }
   });
