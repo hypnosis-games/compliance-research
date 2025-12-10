@@ -1,5 +1,6 @@
 // phaser/spiral-postfx-pipeline.js
-export default class SpiralPostFXPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
+export default class SpiralPostFXPipeline extends Phaser.Renderer.WebGL
+  .Pipelines.PostFXPipeline {
   constructor(game) {
     super({
       game,

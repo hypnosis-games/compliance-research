@@ -57,7 +57,7 @@ export function initArcadeGame({ onGameEvent } = {}) {
     scale: {
       mode: Phaser.Scale.NONE,
     },
-    pipeline: { SpiralPostFXPipeline },
+    pipeline: { SpiralPostFX: SpiralPostFXPipeline },
     scene: [InductionArcadeScene],
   };
 
@@ -76,7 +76,6 @@ export function initArcadeGame({ onGameEvent } = {}) {
       readyCallbacks.forEach((cb) => cb(arcadeScene));
       readyCallbacks = [];
     }
-     
   });
 
   window.addEventListener("resize", () => resizeCanvas(arcadeGame));
