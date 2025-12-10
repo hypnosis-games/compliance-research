@@ -1,5 +1,5 @@
 const DEFAULT_LEFT_FREQUENCY = 220;
-const DEFAULT_RIGHT_FREQUENCY = 226;
+const DEFAULT_RIGHT_FREQUENCY =230;
 const DEFAULT_GAIN = 0.08;
 
 let leftOscillator = null;
