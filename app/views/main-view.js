@@ -5,18 +5,20 @@ export default function MainView(state, emit) {
   console.log("MainView state:", state);
   const startModule = state.startModule || Object.keys(layoutsDictionary)[0];
   const requestedModule = state.params && state.params.module;
+  console.log("Requested module:", requestedModule);
   const moduleName = layoutsDictionary[requestedModule]
     ? requestedModule
     : startModule;
 
   const CurrentLayout = layoutsDictionary[moduleName];
+  console.log("CurrentLayout:", moduleName, CurrentLayout);
   // When we SWITCH INTO induction-arcade, tell store to enter.
   if (moduleName === "induction-arcade" && !state.inductionArcade?.active) {
     emit("inductionArcade/enter");
   }
 
   // When we SWITCH OUT, tell store to exit.
-  if (moduleName !== "induction-arcade" && state.inductionArcade?.active) {
+  if (moduleName   !== "induction-arcade" && state.inductionArcade?.active) {
     emit("inductionArcade/exit");
   }
   return html`

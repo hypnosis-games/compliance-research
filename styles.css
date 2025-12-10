@@ -51,7 +51,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+
   box-sizing: border-box;
 }
 
@@ -73,10 +73,6 @@ body {
 }
 
 @media (orientation: landscape) {
-  .screen-shell {
-    padding: 2rem;
-  }
-
   .screen-card {
     width: min(70vw, 740px, 90vh);
   }
@@ -179,4 +175,93 @@ body {
   background: #1d4ed8;
   box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
   transform: translateY(-1px);
+}
+
+/* induction arcade */
+.induction-arcade-layout {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  color: #f8f8ff;
+  pointer-events: none; /* important: underlying Phaser still clickable */
+}
+
+.induction-arcade-layout .module-header,
+.induction-arcade-layout .induction-arcade-body,
+.induction-arcade-layout button {
+  pointer-events: auto; /* re-enable for actual controls */
+}
+
+.module-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.8rem;
+}
+
+.module-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.induction-arcade-body {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  max-width: 480px;
+  width: 90%;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 1.2rem;
+  padding: 1.2rem 1.6rem;
+  backdrop-filter: blur(8px);
+}
+
+.induction-arcade-status {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.status-row {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.status-label {
+  font-weight: 600;
+}
+
+.induction-arcade-affirmation {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.affirmation-text {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.induction-arcade-controls {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.primary-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  background: #8b5cf6;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.induction-arcade-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  text-align: center;
+  opacity: 0.6;
 }

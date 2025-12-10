@@ -3,6 +3,7 @@ import InductionArcadeScene from "./induction-arcade-scene.js";
 
 let arcadeGame = null;
 let arcadeScene = null;
+let readyCallbacks = [];
 
 function calculateGameDimensions() {
   const viewportWidth = window.innerWidth;
@@ -12,7 +13,7 @@ function calculateGameDimensions() {
   const targetHeight = Math.min(viewportHeight, maxHeight);
 
   const windowAspect = viewportWidth / viewportHeight;
-  const maxAspect = 5 / 9; // always taller than wide
+  const maxAspect = 1; // always taller than wide
   const targetAspect = Math.min(windowAspect, maxAspect);
 
   const targetWidth = Math.round(targetHeight * targetAspect);
@@ -31,12 +32,18 @@ function resizeCanvas(game) {
     canvas.style.height = "100vh";
     canvas.style.width = "auto";
     canvas.style.maxHeight = "100vh";
-    canvas.style.maxWidth = "calc(100vh * 5 / 9)";
+    canvas.style.maxWidth = "calc(100vh)";
   }
 }
 
 export function initArcadeGame({ onGameEvent } = {}) {
-  if (arcadeGame) return { game: arcadeGame, scene: arcadeScene };
+  if (arcadeGame) {
+    // already created
+    if (arcadeScene && onGameEvent) {
+      arcadeScene.externalEventHandler = onGameEvent;
+    }
+    return { game: arcadeGame, scene: arcadeScene };
+  }
 
   const { width, height } = calculateGameDimensions();
 
@@ -48,20 +55,24 @@ export function initArcadeGame({ onGameEvent } = {}) {
     backgroundColor: "#000000",
     scale: {
       mode: Phaser.Scale.NONE,
- 
     },
     scene: [InductionArcadeScene],
   };
 
   arcadeGame = new Phaser.Game(config);
-
   resizeCanvas(arcadeGame);
 
   // wait until the scene has been created
   arcadeGame.events.on("ready", () => {
     arcadeScene = arcadeGame.scene.keys["InductionArcadeScene"];
+
     if (arcadeScene && onGameEvent) {
       arcadeScene.externalEventHandler = onGameEvent;
+    }
+
+    if (arcadeScene && readyCallbacks.length) {
+      readyCallbacks.forEach((cb) => cb(arcadeScene));
+      readyCallbacks = [];
     }
   });
 
@@ -72,4 +83,12 @@ export function initArcadeGame({ onGameEvent } = {}) {
 
 export function getArcadeScene() {
   return arcadeScene;
+}
+
+export function onArcadeReady(cb) {
+  if (arcadeScene) {
+    cb(arcadeScene);
+  } else {
+    readyCallbacks.push(cb);
+  }
 }

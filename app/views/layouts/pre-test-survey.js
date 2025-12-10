@@ -89,7 +89,7 @@ export default function PreTestSurvey(state, emit) {
           selectedValue: null,
           selectedQuestionId: null,
         });
-        emit("navigateToModule", "breath-training-intro");
+        emit("navigateToModule", "induction-arcade");
       } else {
         emit("preTestSurvey/update", {
           currentIndex: nextIndex,

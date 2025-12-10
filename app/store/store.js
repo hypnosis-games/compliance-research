@@ -1,18 +1,18 @@
 // store/store.js
 import layoutsDictionary, { moduleOrder } from "../views/layouts/layouts-dictionary.js";
-import breathTrainingStore from "./breath-training-store.js";
+import inductionArcadeStore from "./induction-arcade-store.js";
 import preTestSurveyStore from "./pre-test-survey-store.js";
 export default function store(state, emitter) {
-  breathTrainingStore(state, emitter);
+  inductionArcadeStore(state, emitter);
   preTestSurveyStore(state, emitter);
   state.moduleOrder = moduleOrder;
   state.startModule = moduleOrder[0] || "consent";
 
   state.personalInfo = {
-    name: "Will",
-    gender: "non-binary",
-    modality: "cisgender",
-    age: 42,
+    name: "",
+    gender: "",
+    modality: "",
+    age: 18,
     consentGiven: false,
   };
 
