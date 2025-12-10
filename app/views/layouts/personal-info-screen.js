@@ -16,72 +16,76 @@ export default function PersonalInfoScreen(state, emit) {
   }
 
   return html`
-    <div class="pa4 sans-serif bg-white dark-gray">
-      <h1 class="f3 mb3">Personal Information</h1>
-      <form onsubmit=${onsubmit} class="measure">
-        <label class="f6 b db mb2">Name</label>
-        <input
-          type="text"
-          name="name"
-          class="input-reset ba b--black-20 pa2 mb3 db w-100"
-          value="${state.personalInfo.name}"
-        />
-
-        <label class="f6 b db mb2">Gender</label>
-        <select
-          name="gender"
-          class="input-reset ba b--black-20 pa2 mb3 db w-100"
-          value="${state.personalInfo.gender}"
-        >
-          ${genders.map(
-            (gender) => html`<option value="${gender}">${gender}</option>`
-          )}
-        </select>
-
-        <label class="f6 b db mb2">Modality</label>
-        <select
-          name="modality"
-          class="input-reset ba b--black-20 pa2 mb3 db w-100"
-          value="${state.personalInfo.modality}"
-        >
-          ${modalities.map(
-            (modality) => html`<option value="${modality}">${modality}</option>`
-          )}
-        </select>
-
-        <label class="f6 b db mb2">Age</label>
-        <input
-          type="number"
-          name="age"
-          min="18"
-          class="input-reset ba b--black-20 pa2 mb3 db w-100"
-          value="${state.personalInfo.age}"
-        />
-
-        <p class="lh-copy mt3 mb3">
-          This research study is an erotic hypnosis experience designed to
-          induce trance and obedience. For more information on the content see
-          <a href="#content-details">here</a>.
+    <div class="screen-shell">
+      <div class="screen-card">
+        <h1 class="screen-title">Personal Information</h1>
+        <p class="screen-subtitle">
+          Tell us a little about yourself before we begin the session.
         </p>
 
-        <label class="f6 b db mb3">
+        <form onsubmit=${onsubmit} class="form-stack">
+          <label class="field-label">Name</label>
           <input
-            class="mr2"
-            type="checkbox"
-            name="consent"
+            type="text"
+            name="name"
+            class="input-control"
+            value="${state.personalInfo.name}"
             required
-            ${state.personalInfo.consentGiven ? "checked" : ""}
           />
-          I understand the description above and consent to proceed.
-        </label>
 
-        <button
-          type="submit"
-          class="f5 link dim br2 ph3 pv2 mb2 dib white bg-dark-blue"
-        >
-          Continue
-        </button>
-      </form>
+          <label class="field-label">Gender</label>
+          <select
+            name="gender"
+            class="input-control"
+            value="${state.personalInfo.gender}"
+          >
+            ${genders.map(
+              (gender) => html`<option value="${gender}">${gender}</option>`
+            )}
+          </select>
+
+          <label class="field-label">Modality</label>
+          <select
+            name="modality"
+            class="input-control"
+            value="${state.personalInfo.modality}"
+          >
+            ${modalities.map(
+              (modality) =>
+                html`<option value="${modality}">${modality}</option>`
+            )}
+          </select>
+
+          <label class="field-label">Age</label>
+          <input
+            type="number"
+            name="age"
+            min="18"
+            class="input-control"
+            value="${state.personalInfo.age}"
+            required
+          />
+
+          <p class="body-text">
+            This research study is an erotic hypnosis experience designed to
+            induce trance and obedience. For more information on the content see
+            <a href="#content-details">here</a>.
+          </p>
+
+          <label class="checkbox-row">
+            <input
+              class="checkbox-input"
+              type="checkbox"
+              name="consent"
+              required
+              ${state.personalInfo.consentGiven ? "checked" : ""}
+            />
+            <span>I understand the description above and consent to proceed.</span>
+          </label>
+
+          <button type="submit" class="primary-button">Continue</button>
+        </form>
+      </div>
     </div>
   `;
 }

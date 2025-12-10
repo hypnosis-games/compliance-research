@@ -9,12 +9,12 @@ export default function ConsentScreen(state, emit) {
           Please read carefully and proceed only if you consent to participate.
         </p>
 
-        <p class="lh-copy mb3">
+        <p class="body-text">
           This is an academic study on attention and compliance. You may stop at
           any time and withdraw your participation without penalty.
         </p>
 
-        <p class="lh-copy mb4">
+        <p class="body-text">
           By selecting “I consent”, you indicate that you have read and understood
           the information above and agree to participate in this study.
         </p>
