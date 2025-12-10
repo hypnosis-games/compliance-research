@@ -1,4 +1,4 @@
-// phaser/induction-arcade-scene.js (only the minigame class changed)
+// phaser/induction-arcade-scene.js
 
 export default class InductionArcadeScene extends Phaser.Scene {
   constructor() {
@@ -6,7 +6,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.mode = "idle"; // 'idle' | 'inductionArcade'
     this.externalEventHandler = null;
     this.currentMinigame = null;
-    this.spiralOpacity = .5;
     this.spiralTween = null;
   }
 
@@ -23,11 +22,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   createIdleBackground() {
-    if (this.spiralTween) {
-      this.spiralTween.stop();
-      this.spiralTween = null;
-    }
-
+    // Simple black bg; spiral is handled by postFX
     this.bgLayer.removeAll(true);
 
     const g = this.add.graphics();
@@ -35,16 +30,12 @@ export default class InductionArcadeScene extends Phaser.Scene {
     g.fillRect(0, 0, this.scale.width, this.scale.height);
     this.bgLayer.add(g);
 
-    const pipeline = this.getSpiralPipeline();
-    if (pipeline) {
-      pipeline.setOverlay(.5);
-    }
+    // Idle spiral: very subtle
+    this.setSpiralOpacity(0.01, { duration: 0 });
   }
 
   getSpiralPipeline() {
-    if (!this.cameras || !this.cameras.main) {
-      return null;
-    }
+    if (!this.cameras || !this.cameras.main) return null;
 
     const cam = this.cameras.main;
     let pipeline = cam.getPostPipeline("SpiralPostFX");
@@ -89,26 +80,6 @@ export default class InductionArcadeScene extends Phaser.Scene {
     } else {
       pipeline.setOverlay(clamped);
     }
-
-    this.spiralOpacity = clamped;
-  }
-
-  createSpiralBackground({ opacity = 0.6, startInvisible = false, fadeDuration = 1000 } = {}) {
-    this.bgLayer.removeAll(true);
-
-    const g = this.add.graphics();
-    g.fillStyle(0x000000, 1);
-    g.fillRect(0, 0, this.scale.width, this.scale.height);
-    this.bgLayer.add(g);
-
-    const pipeline = this.getSpiralPipeline();
-    if (pipeline) {
-      pipeline.setOverlay(startInvisible ? 0 : opacity);
-
-      if (startInvisible && opacity > 0) {
-        this.setSpiralOpacity(opacity, { duration: fadeDuration });
-      }
-    }
   }
 
   setMode(mode, config = {}) {
@@ -138,11 +109,13 @@ export default class InductionArcadeScene extends Phaser.Scene {
       spiralFadeDuration = 1000,
     } = config;
 
-    this.createSpiralBackground({
-      opacity: spiralOpacity,
-      startInvisible: spiralFadeIn,
-      fadeDuration: spiralFadeDuration,
-    });
+    // Set spiral level for the minigame
+    if (spiralFadeIn) {
+      this.setSpiralOpacity(0, { duration: 0 });
+      this.setSpiralOpacity(spiralOpacity, { duration: spiralFadeDuration });
+    } else {
+      this.setSpiralOpacity(spiralOpacity, { duration: 0 });
+    }
 
     this.currentMinigame = new TapWhenWhiteGame(this, {
       onComplete: (result) => {
@@ -186,8 +159,6 @@ class TapWhenWhiteGame {
 
     const { width, height } = scene.scale;
 
-
-
     // White overlay whose alpha we pulse 0 → 1
     this.whiteOverlay = scene.add.rectangle(
       width / 2,
@@ -213,7 +184,6 @@ class TapWhenWhiteGame {
       ease: "Sine.easeInOut",
       onUpdate: (tween, target) => {
         const a = target.alpha;
-        // allow one score per "bright" phase
         if (this.lastAlpha < this.threshold && a >= this.threshold) {
           this.canScore = true;
         }
@@ -221,7 +191,6 @@ class TapWhenWhiteGame {
       },
     });
 
-    // Tap/click anywhere
     this.pointerHandler = (pointer) => this.handleTap(pointer);
     scene.input.on("pointerdown", this.pointerHandler);
   }
@@ -235,7 +204,6 @@ class TapWhenWhiteGame {
       this.canScore = false;
       this.successCount++;
 
-      // Tiny pulse for feedback
       this.scene.tweens.add({
         targets: this.whiteOverlay,
         scaleX: 1.02,
@@ -255,7 +223,6 @@ class TapWhenWhiteGame {
         this.finishGame();
       }
     } else {
-      // optional "off-beat" feedback – very subtle
       this.scene.tweens.add({
         targets: this.whiteOverlay,
         alpha: { from: brightness, to: Math.max(0, brightness - 0.2) },
@@ -269,9 +236,7 @@ class TapWhenWhiteGame {
     if (!this.isActive) return;
     this.isActive = false;
 
-    if (this.tween) {
-      this.tween.stop();
-    }
+    if (this.tween) this.tween.stop();
 
     if (this.onComplete) {
       this.onComplete({
@@ -281,9 +246,7 @@ class TapWhenWhiteGame {
     }
   }
 
-  update(time, delta) {
-    // nothing per-frame for now
-  }
+  update(time, delta) {}
 
   destroy() {
     this.isActive = false;

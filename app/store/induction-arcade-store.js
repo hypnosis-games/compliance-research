@@ -7,7 +7,7 @@ import {
   stopBinauralBeat,
   updateBinauralBeat,
 } from "../audio/binaural-beat.js";
-
+const BASE_SPIRAL_INTENSITY = 0.01;
 const affirmations = [
   "So focused.",
   "Very good.",
@@ -42,7 +42,7 @@ export default function inductionArcadeStore(state, emitter) {
     phase: "headphones",
     env: {
       depthLevel: 0,
-      spiralIntensity: 0.2,
+      spiralIntensity: BASE_SPIRAL_INTENSITY,
       beatIntensity: 0.3,
     },
     lastAffirmation: "",
@@ -60,12 +60,12 @@ export default function inductionArcadeStore(state, emitter) {
 
     if (type === "minigame/success") {
       const depth = state.inductionArcade.env.depthLevel;
-      const newDepth = Math.min(1, depth + 0.05);
+      const newDepth = Math.min(1, depth + 0.005);
 
       state.inductionArcade.env = {
         ...state.inductionArcade.env,
         depthLevel: newDepth,
-        spiralIntensity: 0.2 + newDepth * 0.8,
+        spiralIntensity: BASE_SPIRAL_INTENSITY + newDepth * 0.8,
         beatIntensity: 0.3 + newDepth * 0.5,
       };
 
@@ -150,7 +150,7 @@ export default function inductionArcadeStore(state, emitter) {
     // reset env if you want
     state.inductionArcade.env = {
       depthLevel: 0,
-      spiralIntensity: 0.2,
+      spiralIntensity: BASE_SPIRAL_INTENSITY,
       beatIntensity: 0.3,
     };
 
