@@ -1,7 +1,12 @@
+// views/induction-arcade.js
 export default function InductionArcadeLayout(state, emit) {
   const arcade = state.inductionArcade || {};
-  const { lastAffirmation = "", phase = "headphones", nextGameId } = arcade;
-  const gameOrder = arcade.gameOrder || [];
+  const {
+    phase = "headphones",
+    lastAffirmation = "",
+    nextGameId,
+    gameOrder = [],
+  } = arcade;
 
   let isTouch = true;
   if (typeof window !== "undefined") {
@@ -11,7 +16,15 @@ export default function InductionArcadeLayout(state, emit) {
   }
   const actionWord = isTouch ? "tap" : "click";
 
-  function onBegin(e) {
+  // Phase helpers
+  const isHeadphones = phase === "headphones";
+  const isIntro = phase === "intro";
+  const isInstructions = phase === "instructions";
+  const isGamePhase = phase === "game";
+  const isComplete = phase === "complete";
+
+  // Button handlers
+  function onIntroBegin(e) {
     e.preventDefault();
     emit("inductionArcade/startGame");
   }
@@ -21,44 +34,47 @@ export default function InductionArcadeLayout(state, emit) {
     emit("inductionArcade/confirmHeadphones");
   }
 
+  function onBeginCurrentGame(e) {
+    e.preventDefault();
+    emit("inductionArcade/beginCurrentGame");
+  }
+
   function onNext(e) {
     e.preventDefault();
     emit("navigateNextModule");
   }
 
-  function onBeginMinigame(e) {
-    e.preventDefault();
-    emit("inductionArcade/beginCurrentGame");
-  }
-
+  // Copy
   const introText =
-    `Settle in and get ready to focus. ` +
-    `We will guide you with simple instructions before each round.`;
+    `This task measures focus and attention. ` +
+    `Watch the screen and ${actionWord} when it reaches the target brightness.`;
 
-  const tapInstructionText = `Watch the whole screen pulse brighter and ${
-    actionWord
-  } when the brightness crosses white. Keep a steady rhythm for ten good taps.`;
+  // Instructions for each minigame
+  let instructionsText = "";
+  let roundLabel = "";
 
-  const followInstructionText =
-    `Stay with the softly glowing dot. ${
-      actionWord === "tap" ? "Tap" : "Click"
-    } as it brightens, even as it drifts around the screen.`;
+  if (isInstructions && nextGameId) {
+    const roundIndex = gameOrder.indexOf(nextGameId);
+    const roundNumber = roundIndex >= 0 ? roundIndex + 1 : 1;
+    roundLabel = `Start round ${roundNumber}`;
 
-  const isIntro = phase === "intro";
-  const isGamePhase = phase === "game";
-  const isComplete = phase === "complete";
-  const isHeadphones = phase === "headphones";
-  const isInstructionPhase = phase === "instructions";
-  const isTapInstruction = isInstructionPhase && nextGameId === "tapWhenWhite";
-  const nextRoundNumber =
-    nextGameId && gameOrder.length
-      ? gameOrder.indexOf(nextGameId) + 1
-      : null;
-  const roundLabel = nextRoundNumber ? `round ${nextRoundNumber}` : "this round";
+    if (nextGameId === "tapWhenWhite") {
+      instructionsText =
+        `Watch the screen and ${actionWord} when the whole display ` +
+        `brightens to white. Stay focused on the changing light.`;
+    } else if (nextGameId === "followTheFade") {
+      instructionsText =
+        `Stay with the softly glowing dot. ${actionWord} as it brightens, ` +
+        `even as it drifts around the screen.`;
+    } else {
+      instructionsText =
+        `Follow the on-screen prompts and ${actionWord} when you reach the target.`;
+    }
+  }
 
   const cardClasses = [
     "instruction-card",
-    isIntro ? "instruction-card--intro" : "",
+    isIntro || isHeadphones || isInstructions ? "instruction-card--intro" : "",
     isComplete ? "instruction-card--complete" : "",
   ]
     .filter(Boolean)
@@ -69,26 +85,43 @@ export default function InductionArcadeLayout(state, emit) {
       ${!isGamePhase
         ? html`
             <div class="${cardClasses}">
+              ${isHeadphones
+                ? html`
+                    <p class="instruction-main">
+                      During the following tasks we will be studying the impact
+                      of binaural beats on your focus and attention. Please use
+                      headphones for this task.
+                    </p>
+                    <button
+                      class="primary-btn"
+                      onclick=${onConfirmHeadphones}
+                    >
+                      OK, I am wearing headphones
+                    </button>
+                  `
+                : ""}
+
               ${isIntro
                 ? html`
                     <p class="instruction-main">
                       ${introText}
                     </p>
-                    <button class="primary-btn" onclick=${onBegin}>
+                    <button class="primary-btn" onclick=${onIntroBegin}>
                       I am ready to begin
                     </button>
                   `
                 : ""}
 
-              ${isHeadphones
+              ${isInstructions && instructionsText
                 ? html`
                     <p class="instruction-main">
-                      During the following tasks we will be studying the
-                      impact of binaurl beats on your focus and attention.
-                      Please use headphones for the next task.
+                      ${instructionsText}
                     </p>
-                    <button class="primary-btn" onclick=${onConfirmHeadphones}>
-                      OK I am wearing headphones
+                    <button
+                      class="primary-btn"
+                      onclick=${onBeginCurrentGame}
+                    >
+                      ${roundLabel || "Start"}
                     </button>
                   `
                 : ""}
@@ -100,17 +133,6 @@ export default function InductionArcadeLayout(state, emit) {
                     </p>
                     <button class="primary-btn" onclick=${onNext}>
                       Continue to next part
-                    </button>
-                  `
-                : ""}
-
-                  ${isInstructionPhase
-                ? html`
-                    <p class="instruction-main">
-                      ${isTapInstruction ? tapInstructionText : followInstructionText}
-                    </p>
-                    <button class="primary-btn" onclick=${onBeginMinigame}>
-                      Start ${roundLabel}
                     </button>
                   `
                 : ""}

@@ -41,23 +41,16 @@ function resetBeatState(state) {
   };
 }
 
-/**
- * Normalize input into our internal game IDs:
- *   - "tap-when-white" / "tap when white" / etc → "tapWhenWhite"
- *   - "follow-the-fade" / "follow the fade" → "followTheFade"
- *   - already-normalized IDs ("tapWhenWhite", "followTheFade") are passed through
- */
 function normalizeGameId(raw) {
   if (!raw) return null;
 
   const str = `${raw}`.trim();
 
-  // Already internal IDs
+  // Already-normalized IDs
   if (str === "tapWhenWhite" || str === "followTheFade") {
     return str;
   }
 
-  // Normalize URL-ish / human text
   const normalized = str
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -76,22 +69,14 @@ function normalizeGameId(raw) {
 function parseStartingGameFromHash() {
   if (typeof window === "undefined") return null;
 
-  console.log("Parsing starting game from URL hash");
   const hash = window.location.hash || "";
-  console.log("Current URL hash:", hash);
-
   const hashParamsString = hash.includes("?") ? hash.split("?")[1] : "";
   const hashParams = new URLSearchParams(hashParamsString);
   const gameParam = hashParams.get("game");
 
-  console.log("Parsed game param from URL:", gameParam);
   return normalizeGameId(gameParam);
 }
 
-/**
- * Given a starting game, return the sequence for this session.
- * Input can be already-normalized or URL-ish; we normalize inside.
- */
 function getGameOrder(startingGame) {
   const start = normalizeGameId(startingGame);
 
@@ -110,6 +95,7 @@ export default function inductionArcadeStore(state, emitter) {
 
   state.inductionArcade = state.inductionArcade || {
     active: false,
+    // Phases: 'headphones' → 'intro' → 'instructions' → 'game' → 'complete'
     phase: "headphones",
     env: {
       depthLevel: 0,
@@ -118,8 +104,8 @@ export default function inductionArcadeStore(state, emitter) {
     },
     startingGame: startingFromHash || "tapWhenWhite",
     gameOrder: getGameOrder(startingFromHash || "tapWhenWhite"),
-    currentGameId: null,
-    nextGameId: null,
+    currentGameId: null, // currently running minigame
+    nextGameId: null,    // minigame shown in the instructions card
     lastAffirmation: "",
     affirmationTimeoutId: null,
     binauralBeat: {
@@ -130,6 +116,7 @@ export default function inductionArcadeStore(state, emitter) {
   };
 
   // ---- Game events coming from Phaser ----
+
   emitter.on("inductionArcade/gameEvent", (evt) => {
     const { type, payload } = evt;
     console.log("Game event from Phaser:", type, payload);
@@ -154,15 +141,12 @@ export default function inductionArcadeStore(state, emitter) {
         updateBinauralBeat(frequencies);
       }
 
-      // new affirmation
       state.inductionArcade.lastAffirmation = pickRandom(affirmations);
 
-      // clear previous hide timer
       if (state.inductionArcade.affirmationTimeoutId) {
         clearTimeout(state.inductionArcade.affirmationTimeoutId);
       }
 
-      // hide after ~900ms
       state.inductionArcade.affirmationTimeoutId = setTimeout(() => {
         state.inductionArcade.lastAffirmation = "";
         state.inductionArcade.affirmationTimeoutId = null;
@@ -184,7 +168,7 @@ export default function inductionArcadeStore(state, emitter) {
       const { final = true } = payload || {};
 
       if (final) {
-        // End of sequence
+        // End of whole sequence
         state.inductionArcade.phase = "complete";
         state.inductionArcade.lastAffirmation = "";
         state.inductionArcade.currentGameId = null;
@@ -192,19 +176,18 @@ export default function inductionArcadeStore(state, emitter) {
         stopBinauralBeat();
         resetBeatState(state);
       } else {
-        // Move to next game in the order
+        // Move to next game in the order, keep env.spiralIntensity
         const currentIndex = state.inductionArcade.gameOrder.indexOf(
           state.inductionArcade.currentGameId
         );
         const nextIndex = currentIndex + 1;
-        const nextGame = state.inductionArcade.gameOrder[nextIndex];
+        const nextGame = state.inductionArcade.gameOrder[nextIndex] || null;
 
         state.inductionArcade.currentGameId = null;
-        state.inductionArcade.nextGameId = nextGame || null;
+        state.inductionArcade.nextGameId = nextGame;
         state.inductionArcade.phase = nextGame ? "instructions" : "complete";
-      }
 
-      if (!final) {
+        // Re-assert spiral at current env intensity while showing instructions
         onArcadeReady((scene) => {
           if (scene.setSpiralOpacity) {
             scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
@@ -223,11 +206,18 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/enter", () => {
     if (state.inductionArcade.active) return;
 
+    const startingFromHashNow = parseStartingGameFromHash();
     state.inductionArcade.active = true;
     state.inductionArcade.phase = "headphones";
     state.inductionArcade.lastAffirmation = "";
     state.inductionArcade.currentGameId = null;
     state.inductionArcade.nextGameId = null;
+
+    // Recompute order each time you enter, in case URL changed
+    state.inductionArcade.startingGame = startingFromHashNow || "tapWhenWhite";
+    state.inductionArcade.gameOrder = getGameOrder(
+      state.inductionArcade.startingGame
+    );
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
@@ -253,17 +243,41 @@ export default function inductionArcadeStore(state, emitter) {
     emitter.emit("render");
   });
 
-  // User presses "I am ready to begin" on the *first* instructions
-  emitter.on("inductionArcade/startGame", () => {
-    const fromUrl = parseStartingGameFromHash();
-    console.log("Starting induction arcade game", fromUrl);
+  // First: headphones → intro
+  emitter.on("inductionArcade/confirmHeadphones", () => {
+    state.inductionArcade.phase = "intro";
+    state.inductionArcade.lastAffirmation = "";
+    state.inductionArcade.currentGameId = null;
+    state.inductionArcade.nextGameId = null;
+    stopBinauralBeat();
+    resetBeatState(state);
 
+    onArcadeReady((scene) => {
+      scene.setMode("idle");
+    });
+
+    emitter.emit("render");
+  });
+
+  // User presses "I am ready to begin" on the *intro* card
+  emitter.on("inductionArcade/startGame", () => {
+    // If we already have a queued game, treat this as "beginCurrentGame"
+    // so we don't reset spiralIntensity mid-session.
+    if (
+      state.inductionArcade.currentGameId !== null ||
+      state.inductionArcade.nextGameId !== null
+    ) {
+      console.log(
+        "inductionArcade/startGame called mid-session; delegating to beginCurrentGame"
+      );
+      emitter.emit("inductionArcade/beginCurrentGame");
+      return;
+    }
+
+    const fromUrl = parseStartingGameFromHash();
     if (fromUrl) {
       state.inductionArcade.startingGame = fromUrl;
     }
-
-    state.inductionArcade.phase = "game"; // transient; we flip to instructions right after
-    state.inductionArcade.lastAffirmation = "";
 
     state.inductionArcade.gameOrder = getGameOrder(
       state.inductionArcade.startingGame
@@ -271,8 +285,9 @@ export default function inductionArcadeStore(state, emitter) {
     state.inductionArcade.currentGameId = null;
     state.inductionArcade.nextGameId = state.inductionArcade.gameOrder[0];
     state.inductionArcade.phase = "instructions";
+    state.inductionArcade.lastAffirmation = "";
 
-    // reset env
+    // Reset env (and thus spiral) only once at the start of the sequence
     state.inductionArcade.env = {
       depthLevel: 0,
       spiralIntensity: BASE_SPIRAL_INTENSITY,
@@ -292,7 +307,7 @@ export default function inductionArcadeStore(state, emitter) {
     onArcadeReady((scene) => {
       scene.setMode("inductionArcade", {
         spiralOpacity: state.inductionArcade.env.spiralIntensity,
-        spiralFadeIn: true,
+        spiralFadeIn: false,
         spiralFadeDuration: 1200,
         autoStart: false,
         initialGame: state.inductionArcade.nextGameId,
@@ -303,7 +318,7 @@ export default function inductionArcadeStore(state, emitter) {
     emitter.emit("render");
   });
 
-  // User presses "I am ready to begin" for the *current* game
+  // User presses "Start round X" for the current game
   emitter.on("inductionArcade/beginCurrentGame", () => {
     const { nextGameId, gameOrder } = state.inductionArcade;
     if (!nextGameId) return;
@@ -328,21 +343,6 @@ export default function inductionArcadeStore(state, emitter) {
       if (scene.startMinigame) {
         scene.startMinigame(nextGameId, { final: isFinal });
       }
-    });
-
-    emitter.emit("render");
-  });
-
-  emitter.on("inductionArcade/confirmHeadphones", () => {
-    state.inductionArcade.phase = "intro";
-    state.inductionArcade.lastAffirmation = "";
-    state.inductionArcade.currentGameId = null;
-    state.inductionArcade.nextGameId = null;
-    stopBinauralBeat();
-    resetBeatState(state);
-
-    onArcadeReady((scene) => {
-      scene.setMode("idle");
     });
 
     emitter.emit("render");
