@@ -6,6 +6,7 @@ import {
   startBinauralBeat,
   stopBinauralBeat,
   updateBinauralBeat,
+  warmBinauralBeatContext,
 } from "../audio/binaural-beat.js";
 import {
   complianceInstructions,
@@ -356,7 +357,7 @@ export default function inductionArcadeStore(state, emitter) {
   });
 
   // First: headphones → intro
-  emitter.on("inductionArcade/confirmHeadphones", () => {
+  emitter.on("inductionArcade/confirmHeadphones", async () => {
     state.inductionArcade.phase = "intro";
     state.inductionArcade.lastAffirmation = "";
     state.inductionArcade.currentGameId = null;
@@ -364,6 +365,10 @@ export default function inductionArcadeStore(state, emitter) {
     stopBinauralBeat();
     resetBeatState(state);
     resetIntermissionSurvey(state);
+
+    // Prime Tone.js while we still have a user gesture so iOS Safari will
+    // allow audio playback when the game starts.
+    await warmBinauralBeatContext();
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
@@ -373,7 +378,7 @@ export default function inductionArcadeStore(state, emitter) {
   });
 
   // User presses "I am ready to begin" on the *intro* card
-  emitter.on("inductionArcade/startGame", () => {
+  emitter.on("inductionArcade/startGame", async () => {
     // If we already have a queued game, treat this as "beginCurrentGame"
     // so we don't reset spiralIntensity mid-session.
     if (
@@ -416,7 +421,7 @@ export default function inductionArcadeStore(state, emitter) {
       ...frequencies,
       playing: true,
     };
-    startBinauralBeat(frequencies);
+    await startBinauralBeat(frequencies);
 
     onArcadeReady((scene) => {
       scene.setMode("inductionArcade", {
