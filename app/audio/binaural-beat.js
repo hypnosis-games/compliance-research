@@ -110,10 +110,10 @@ export async function startBinauralBeat({
   stereoMerger = new ToneJS.Merge().connect(masterGain);
 
   leftOscillator = new ToneJS.Oscillator(leftFrequency, "sine")
-    .connect(stereoMerger.left)
+    .connect(stereoMerger, 0, 0)
     .start();
   rightOscillator = new ToneJS.Oscillator(rightFrequency, "sine")
-    .connect(stereoMerger.right)
+    .connect(stereoMerger, 0, 1)
     .start();
 
   return true;
