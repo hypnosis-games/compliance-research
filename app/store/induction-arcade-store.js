@@ -421,7 +421,13 @@ export default function inductionArcadeStore(state, emitter) {
       ...frequencies,
       playing: true,
     };
-    await startBinauralBeat(frequencies);
+    const started = await startBinauralBeat(frequencies);
+    if (!started) {
+      state.inductionArcade.binauralBeat = {
+        ...state.inductionArcade.binauralBeat,
+        playing: false,
+      };
+    }
 
     onArcadeReady((scene) => {
       scene.setMode("inductionArcade", {
