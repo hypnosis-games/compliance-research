@@ -8,6 +8,17 @@ let stereoMerger = null;
 let masterGain = null;
 let toneReadyPromise = null;
 
+function getAudioContext(ToneJS) {
+  if (!ToneJS) return null;
+
+  const context = ToneJS.context || (typeof ToneJS.getContext === "function" ? ToneJS.getContext() : null);
+  if (!context) return null;
+
+  if (context.rawContext) return context.rawContext;
+  if (context.context) return context.context;
+  return context;
+}
+
 function getTone() {
   if (typeof Tone !== "undefined") return Tone;
   if (typeof window !== "undefined" && window.Tone) return window.Tone;
@@ -61,8 +72,9 @@ async function ensureToneReady(ToneJS) {
       await ToneJS.start();
     }
 
-    if (ToneJS.context?.state === "suspended" && ToneJS.context.resume) {
-      await ToneJS.context.resume();
+    const audioContext = getAudioContext(ToneJS);
+    if (audioContext?.state === "suspended" && audioContext.resume) {
+      await audioContext.resume();
     }
 
     return true;
