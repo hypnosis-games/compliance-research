@@ -1,4 +1,5 @@
 // views/induction-arcade.js
+import IntermissionSurvey from "../partials/intermission-survey.js";
 export default function InductionArcadeLayout(state, emit) {
   const arcade = state.inductionArcade || {};
   const {
@@ -6,6 +7,7 @@ export default function InductionArcadeLayout(state, emit) {
     lastAffirmation = "",
     nextGameId,
     gameOrder = [],
+    survey = {},
   } = arcade;
 
   let isTouch = true;
@@ -21,6 +23,7 @@ export default function InductionArcadeLayout(state, emit) {
   const isIntro = phase === "intro";
   const isInstructions = phase === "instructions";
   const isGamePhase = phase === "game";
+  const isSurvey = phase === "survey";
   const isComplete = phase === "complete";
 
   // Button handlers
@@ -82,7 +85,7 @@ export default function InductionArcadeLayout(state, emit) {
 
   return html`
     <section class="layout induction-arcade-layout">
-      ${!isGamePhase
+      ${!isGamePhase && !isSurvey
         ? html`
             <div class="${cardClasses}">
               ${isHeadphones
@@ -138,6 +141,13 @@ export default function InductionArcadeLayout(state, emit) {
                 : ""}
             </div>
           `
+        : ""}
+
+      ${isSurvey
+        ? IntermissionSurvey({
+            survey,
+            emit,
+          })
         : ""}
 
       ${lastAffirmation && isGamePhase
