@@ -46,7 +46,7 @@ export default function IntermissionSurvey({ survey = {}, emit }) {
 
         <div class="mb3">
           ${instructions.map(
-            (line) => html`<p class="lh-copy mv2 f6 gray">${line}</p>`
+            (line) => html`<p class="lh-copy mv2 f6 instruction-line">${line}</p>`
           )}
         </div>
 

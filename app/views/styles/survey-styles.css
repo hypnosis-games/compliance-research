@@ -4,7 +4,7 @@
 
 /* Progress bar */
 .progress-bg {
-  background: #f4f4f4;
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
   overflow: hidden;
   height: 0.5rem;
@@ -12,22 +12,53 @@
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #ec4899);
+  background: linear-gradient(90deg, #6366f1, #f472b6);
   transition: width 0.3s ease-out;
+}
+
+.intermission-survey-shell .screen-card {
+  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.16), transparent 28%),
+    #0b1220;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  color: #e2e8f0;
+}
+
+.intermission-survey-shell .screen-title,
+.intermission-survey-shell .screen-subtitle,
+.intermission-survey-shell .pretest-page-indicator {
+  color: #e2e8f0;
+}
+
+.intermission-survey-shell .gray {
+  color: #cbd5e1;
+}
+
+.intermission-survey-shell .instruction-line {
+  color: #cbd5e1;
+  letter-spacing: 0.01em;
 }
 
 /* Question card base */
 .question-card {
-  background: #fafafa;
+  background: rgba(15, 23, 42, 0.85);
   border-radius: 1rem;
   padding: 1.75rem 1.5rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.35);
   transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  color: #e2e8f0;
 }
 
 /* fade in for new questions */
 .question-card.animated {
   animation: fadeInUp 0.25s ease-out;
+}
+
+.question-card .question-text {
+  color: #f8fafc;
 }
 
 @keyframes fadeInUp {
@@ -75,6 +106,11 @@
   opacity: 0;
 }
 
+.scale-labels span,
+.scale-labels {
+  color: #cbd5e1;
+}
+
 /* Rating row and pills */
 .rating-scale-row {
   display: flex;
@@ -91,25 +127,28 @@
 .rating-pill {
   flex: 1;
   border-radius: 9999px;
-  border: 1px solid #d4d4d4;
-  background: white;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.04);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0.5rem 0;
   transition: all 0.15s ease-out;
+  color: #e2e8f0;
 }
 
 .rating-pill:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  border-color: rgba(236, 72, 153, 0.6);
 }
 
 /* Selected pill stays strong */
 .rating-pill.selected {
-  border-color: #4f46e5;
-  background: rgba(79, 70, 229, 0.12);
-  color: #312e81;
+  border-color: transparent;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.85), rgba(236, 72, 153, 0.85));
+  color: #f8fafc;
+  box-shadow: 0 10px 26px rgba(79, 70, 229, 0.45);
 }
 
 /* When in affirm/out phase, fade out the non-selected pills */
@@ -125,10 +164,11 @@
 }
 
 .affirmation-big {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #16a34a; /* green, "good job" */
-  animation: affirmation-fade 0.4s ease-out;
+  color: #f8fafc;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.55);
+  animation: arcadeAffirmInOut 0.9s ease-out;
 }
 
 @keyframes affirmation-fade {
@@ -150,6 +190,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 1.25rem;
+  color: #f8fafc;
 }
 
 /* Put Likert row in a clean column */
