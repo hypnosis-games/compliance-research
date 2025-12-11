@@ -1,5 +1,5 @@
 const DEFAULT_LEFT_FREQUENCY = 220;
-const DEFAULT_RIGHT_FREQUENCY =230;
+const DEFAULT_RIGHT_FREQUENCY = 230;
 const DEFAULT_GAIN = 0.08;
 
 let leftOscillator = null;
@@ -7,6 +7,7 @@ let rightOscillator = null;
 let leftPanner = null;
 let rightPanner = null;
 let masterGain = null;
+let toneReadyPromise = null;
 
 function getTone() {
   if (typeof Tone !== "undefined") return Tone;
@@ -42,7 +43,44 @@ export function stopBinauralBeat() {
   teardownNodes();
 }
 
-export function startBinauralBeat({
+export async function warmBinauralBeatContext() {
+  const ToneJS = getTone();
+  if (!ToneJS) return false;
+
+  return ensureToneReady(ToneJS);
+}
+
+async function ensureToneReady(ToneJS) {
+  if (!ToneJS) return false;
+
+  if (toneReadyPromise) return toneReadyPromise;
+
+  toneReadyPromise = (async () => {
+    // iOS Safari requires AudioContext resume from a user gesture. Tone.start()
+    // and context.resume() return promises, so await both to ensure the
+    // context is ready before creating any nodes.
+    if (typeof ToneJS.start === "function") {
+      await ToneJS.start();
+    }
+
+    if (ToneJS.context?.state === "suspended" && ToneJS.context.resume) {
+      await ToneJS.context.resume();
+    }
+
+    return true;
+  })();
+
+  try {
+    await toneReadyPromise;
+    return true;
+  } catch (err) {
+    console.warn("Tone.js could not start audio context", err);
+    toneReadyPromise = null;
+    return false;
+  }
+}
+
+export async function startBinauralBeat({
   leftFrequency = DEFAULT_LEFT_FREQUENCY,
   rightFrequency = DEFAULT_RIGHT_FREQUENCY,
   gain = DEFAULT_GAIN,
@@ -53,13 +91,8 @@ export function startBinauralBeat({
     return false;
   }
 
-  // Ensure the audio context is running (must be called from a user gesture).
-  if (ToneJS.start) {
-    ToneJS.start();
-  }
-  if (ToneJS.context?.state === "suspended" && ToneJS.context.resume) {
-    ToneJS.context.resume();
-  }
+  const toneReady = await ensureToneReady(ToneJS);
+  if (!toneReady) return false;
 
   teardownNodes();
 
