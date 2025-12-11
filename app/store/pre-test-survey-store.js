@@ -4,7 +4,7 @@ import {
   complianceInstructions,
   complianceLikertLabels,
   complianceLikertOptions,
-  complianceQuestions,
+  sampleComplianceQuestions,
 } from "../data/compliance-questions.js";
 
 export default function preTestSurveyStore(state, emitter) {
@@ -14,7 +14,7 @@ export default function preTestSurveyStore(state, emitter) {
   s.instructions = s.instructions || complianceInstructions;
   s.likertOptions = s.likertOptions || complianceLikertOptions;
   s.likertLabels = s.likertLabels || complianceLikertLabels;
-  s.questions = s.questions || complianceQuestions;
+  s.questions = s.questions || sampleComplianceQuestions();
 
   s.currentIndex =
     typeof s.currentIndex === "number" ? s.currentIndex : 0;
