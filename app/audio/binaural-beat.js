@@ -4,8 +4,7 @@ const DEFAULT_GAIN = 0.08;
 
 let leftOscillator = null;
 let rightOscillator = null;
-let leftPanner = null;
-let rightPanner = null;
+let stereoMerger = null;
 let masterGain = null;
 let toneReadyPromise = null;
 
@@ -26,7 +25,7 @@ function teardownNodes() {
     }
   });
 
-  [leftPanner, rightPanner, masterGain].forEach((node) => {
+  [stereoMerger, masterGain].forEach((node) => {
     if (node && typeof node.dispose === "function") {
       node.dispose();
     }
@@ -34,8 +33,7 @@ function teardownNodes() {
 
   leftOscillator = null;
   rightOscillator = null;
-  leftPanner = null;
-  rightPanner = null;
+  stereoMerger = null;
   masterGain = null;
 }
 
@@ -97,14 +95,13 @@ export async function startBinauralBeat({
   teardownNodes();
 
   masterGain = new ToneJS.Gain(gain).toDestination();
-  leftPanner = new ToneJS.Panner(-1).connect(masterGain);
-  rightPanner = new ToneJS.Panner(1).connect(masterGain);
+  stereoMerger = new ToneJS.Merge().connect(masterGain);
 
   leftOscillator = new ToneJS.Oscillator(leftFrequency, "sine")
-    .connect(leftPanner)
+    .connect(stereoMerger.left)
     .start();
   rightOscillator = new ToneJS.Oscillator(rightFrequency, "sine")
-    .connect(rightPanner)
+    .connect(stereoMerger.right)
     .start();
 
   return true;
