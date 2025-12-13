@@ -76,6 +76,10 @@ export default function InductionArcadeLayout(state, emit) {
       instructionsText =
         `Stay with the softly glowing dot. ${actionWord} as it brightens, ` +
         `even as it drifts around the screen.`;
+    } else if (nextGameId === "focusExercise") {
+      instructionsText =
+        `Settle your gaze on the white dot. Let it guide your breath as it ` +
+        `slowly pulses larger and smaller.`;
     } else {
       instructionsText =
         `Follow the on-screen prompts and ${actionWord} when you reach the target.`;

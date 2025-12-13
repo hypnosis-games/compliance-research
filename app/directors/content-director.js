@@ -8,7 +8,7 @@ import {
   taskAffirmationsByOutcome,
 } from "../data/affirmation-and-question-strings.js";
 
-const MAX_DEPTH = 3;
+const MAX_DEPTH = 5;
 
 const interjectionStepsByType = {
   focus: {
