@@ -44,7 +44,7 @@ export default function InductionArcadeLayout(state, emit) {
 
   function onNext(e) {
     e.preventDefault();
-    emit("nav/goToNextModule");
+    emit("nav/nextModule");
   }
 
   // Copy

@@ -14,35 +14,20 @@ import {
   complianceLikertOptions,
   sampleComplianceQuestions,
 } from "../data/compliance-questions.js";
-
-const BASE_SPIRAL_INTENSITY = 0.01;
-
-const affirmations = [
-  "So focused.",
-  "Very good.",
-  "So good.",
-  "Keep watching.",
-  "Nice.",
-  "Exactly right.",
-];
-
-const surveyNeutralAffirmations = [
-  "Good.",
-  "Nice.",
-  "You’re doing well.",
-  "Next question.",
-  "Keep going.",
-  "Staying focused.",
-];
-
-const surveyPraiseAffirmations = [
-  "Very good.",
-  "That’s right.",
-  "Excellent.",
-  "Perfect.",
-  "Exactly.",
-  "Nicely done.",
-];
+import {
+  AFFIRMATIONS,
+  BASE_SPIRAL_INTENSITY,
+  BEAT_INTENSITY_BASE,
+  BEAT_INTENSITY_SCALE,
+  DEFAULT_ENV,
+  DEFAULT_STARTING_GAME,
+  DEPTH_INCREMENT_PER_SUCCESS,
+  GAME_IDS,
+  MAX_DEPTH_LEVEL,
+  PHASES,
+  SPIRAL_SCALE_PER_DEPTH,
+  TIMING,
+} from "../data/induction-arcade-constants.js";
 
 // ----------------- Helpers -----------------
 
@@ -69,6 +54,13 @@ function removeIntermissionSurveyTimeout(state, timeoutId) {
   state.inductionArcade.surveyTimeoutIds = (
     state.inductionArcade.surveyTimeoutIds || []
   ).filter((id) => id !== timeoutId);
+}
+
+function clearAffirmationTimeout(state) {
+  if (!state.inductionArcade?.affirmationTimeoutId) return;
+
+  clearTimeout(state.inductionArcade.affirmationTimeoutId);
+  state.inductionArcade.affirmationTimeoutId = null;
 }
 
 function calculateBeatFrequencies(depthLevel = 0) {
@@ -114,7 +106,7 @@ function normalizeGameId(raw) {
   const str = `${raw}`.trim();
 
   // Already-normalized IDs
-  if (str === "tapWhenWhite" || str === "followTheFade") {
+  if (str === GAME_IDS.TAP_WHEN_WHITE || str === GAME_IDS.FOLLOW_THE_FADE) {
     return str;
   }
 
@@ -147,12 +139,65 @@ function parseStartingGameFromHash() {
 function getGameOrder(startingGame) {
   const start = normalizeGameId(startingGame);
 
-  if (start === "followTheFade") {
-    return ["followTheFade", "tapWhenWhite"];
+  if (start === GAME_IDS.FOLLOW_THE_FADE) {
+    return [GAME_IDS.FOLLOW_THE_FADE, GAME_IDS.TAP_WHEN_WHITE];
   }
 
   // Default: tapWhenWhite first, then followTheFade
-  return ["tapWhenWhite", "followTheFade"];
+  return [GAME_IDS.TAP_WHEN_WHITE, GAME_IDS.FOLLOW_THE_FADE];
+}
+
+function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
+  clearAffirmationTimeout(state);
+  if (nextPhase !== PHASES.SURVEY) {
+    clearIntermissionSurveyTimeouts(state);
+  }
+
+  let phaseSpecificPatch = {};
+
+  if (
+    nextPhase === PHASES.HEADPHONES ||
+    nextPhase === PHASES.INTRO
+  ) {
+    stopBinauralBeat();
+    resetBeatState(state);
+    resetIntermissionSurvey(state);
+    phaseSpecificPatch = {
+      lastAffirmation: "",
+      currentGameId: null,
+      nextGameId: null,
+      env: { ...DEFAULT_ENV },
+    };
+  }
+
+  if (nextPhase === PHASES.INSTRUCTIONS) {
+    resetIntermissionSurvey(state, { active: false });
+  }
+
+  if (nextPhase === PHASES.SURVEY) {
+    resetIntermissionSurvey(state, { active: true });
+  }
+
+  if (nextPhase === PHASES.COMPLETE) {
+    stopBinauralBeat();
+    resetBeatState(state);
+    resetIntermissionSurvey(state);
+    phaseSpecificPatch = {
+      lastAffirmation: "",
+      currentGameId: null,
+      nextGameId: null,
+      env: { ...DEFAULT_ENV },
+    };
+  }
+
+  state.inductionArcade = {
+    ...state.inductionArcade,
+    ...phaseSpecificPatch,
+    ...patch,
+    phase: nextPhase,
+  };
+
+  emitter.emit("render");
 }
 
 // ----------------- Store -----------------
@@ -162,17 +207,12 @@ export default function inductionArcadeStore(state, emitter) {
 
   state.inductionArcade = state.inductionArcade || {
     active: false,
-    // Phases: 'headphones' → 'intro' → 'instructions' → 'game' → 'survey' → 'complete'
-    phase: "headphones",
-    env: {
-      depthLevel: 0,
-      spiralIntensity: BASE_SPIRAL_INTENSITY,
-      beatIntensity: 0.3,
-    },
-    startingGame: startingFromHash || "tapWhenWhite",
-    gameOrder: getGameOrder(startingFromHash || "tapWhenWhite"),
-    currentGameId: null, // currently running minigame
-    nextGameId: null,    // minigame shown in the instructions card
+    phase: PHASES.HEADPHONES,
+    env: { ...DEFAULT_ENV },
+    startingGame: startingFromHash || DEFAULT_STARTING_GAME,
+    gameOrder: getGameOrder(startingFromHash || DEFAULT_STARTING_GAME),
+    currentGameId: null,
+    nextGameId: null,
     lastAffirmation: "",
     affirmationTimeoutId: null,
     surveyTimeoutIds: [],
@@ -192,13 +232,17 @@ export default function inductionArcadeStore(state, emitter) {
 
     if (type === "minigame/success") {
       const depth = state.inductionArcade.env.depthLevel;
-      const newDepth = Math.min(1, depth + 0.005);
+      const newDepth = Math.min(
+        MAX_DEPTH_LEVEL,
+        depth + DEPTH_INCREMENT_PER_SUCCESS
+      );
 
       state.inductionArcade.env = {
         ...state.inductionArcade.env,
         depthLevel: newDepth,
-        spiralIntensity: BASE_SPIRAL_INTENSITY + newDepth * 0.2,
-        beatIntensity: 0.3 + newDepth * 0.5,
+        spiralIntensity:
+          BASE_SPIRAL_INTENSITY + newDepth * SPIRAL_SCALE_PER_DEPTH,
+        beatIntensity: BEAT_INTENSITY_BASE + newDepth * BEAT_INTENSITY_SCALE,
       };
 
       if (state.inductionArcade.binauralBeat.playing) {
@@ -210,17 +254,17 @@ export default function inductionArcadeStore(state, emitter) {
         updateBinauralBeat(frequencies);
       }
 
-      state.inductionArcade.lastAffirmation = pickRandom(affirmations);
+      state.inductionArcade.lastAffirmation = pickRandom(
+        AFFIRMATIONS.GAMEPLAY
+      );
 
-      if (state.inductionArcade.affirmationTimeoutId) {
-        clearTimeout(state.inductionArcade.affirmationTimeoutId);
-      }
+      clearAffirmationTimeout(state);
 
       state.inductionArcade.affirmationTimeoutId = setTimeout(() => {
         state.inductionArcade.lastAffirmation = "";
         state.inductionArcade.affirmationTimeoutId = null;
         emitter.emit("render");
-      }, 900);
+      }, TIMING.AFFIRMATION_CLEAR_MS);
 
       onArcadeReady((scene) => {
         if (scene.setSpiralOpacity) {
@@ -237,14 +281,10 @@ export default function inductionArcadeStore(state, emitter) {
       const { final = true } = payload || {};
 
       if (final) {
-        // End of whole sequence
-        state.inductionArcade.phase = "complete";
-        state.inductionArcade.lastAffirmation = "";
-        state.inductionArcade.currentGameId = null;
-        state.inductionArcade.nextGameId = null;
-        stopBinauralBeat();
-        resetBeatState(state);
-        resetIntermissionSurvey(state);
+        setInductionArcadePhase(state, emitter, PHASES.COMPLETE, {
+          currentGameId: null,
+          nextGameId: null,
+        });
       } else {
         // Move to next game in the order, keep env.spiralIntensity
         const currentIndex = state.inductionArcade.gameOrder.indexOf(
@@ -253,10 +293,15 @@ export default function inductionArcadeStore(state, emitter) {
         const nextIndex = currentIndex + 1;
         const nextGame = state.inductionArcade.gameOrder[nextIndex] || null;
 
-        state.inductionArcade.currentGameId = null;
-        state.inductionArcade.nextGameId = nextGame;
-        state.inductionArcade.phase = nextGame ? "survey" : "complete";
-        resetIntermissionSurvey(state, { active: Boolean(nextGame) });
+        setInductionArcadePhase(
+          state,
+          emitter,
+          nextGame ? PHASES.SURVEY : PHASES.COMPLETE,
+          {
+            currentGameId: null,
+            nextGameId: nextGame,
+          }
+        );
 
         // Re-assert spiral at current env intensity while showing survey/instructions
         onArcadeReady((scene) => {
@@ -292,8 +337,8 @@ export default function inductionArcadeStore(state, emitter) {
 
     const isPraise = numeric >= 4;
     const fullAffirmation = isPraise
-      ? pickRandom(surveyPraiseAffirmations)
-      : pickRandom(surveyNeutralAffirmations);
+      ? pickRandom(AFFIRMATIONS.SURVEY_PRAISE)
+      : pickRandom(AFFIRMATIONS.SURVEY_NEUTRAL);
 
     const nextIndex = survey.currentIndex + 1;
     const isLast = nextIndex >= (survey.questions?.length || 0);
@@ -315,17 +360,20 @@ export default function inductionArcadeStore(state, emitter) {
         animPhase: "out",
       };
       emitter.emit("render");
-    }, 500);
+    }, TIMING.SURVEY_FADE_MS);
 
     trackIntermissionSurveyTimeout(state, fadeTimeoutId);
 
     const advanceTimeoutId = setTimeout(() => {
       removeIntermissionSurveyTimeout(state, advanceTimeoutId);
       if (isLast) {
-        state.inductionArcade.phase = state.inductionArcade.nextGameId
-          ? "instructions"
-          : "complete";
-        resetIntermissionSurvey(state);
+        setInductionArcadePhase(
+          state,
+          emitter,
+          state.inductionArcade.nextGameId
+            ? PHASES.INSTRUCTIONS
+            : PHASES.COMPLETE
+        );
       } else {
         state.inductionArcade.survey = {
           ...state.inductionArcade.survey,
@@ -338,7 +386,7 @@ export default function inductionArcadeStore(state, emitter) {
       }
 
       emitter.emit("render");
-    }, 900);
+    }, TIMING.SURVEY_ADVANCE_MS);
 
     trackIntermissionSurveyTimeout(state, advanceTimeoutId);
   });
@@ -350,52 +398,44 @@ export default function inductionArcadeStore(state, emitter) {
 
     const startingFromHashNow = parseStartingGameFromHash();
     state.inductionArcade.active = true;
-    state.inductionArcade.phase = "headphones";
-    state.inductionArcade.lastAffirmation = "";
-    state.inductionArcade.currentGameId = null;
-    state.inductionArcade.nextGameId = null;
-    resetIntermissionSurvey(state);
-
-    // Recompute order each time you enter, in case URL changed
-    state.inductionArcade.startingGame = startingFromHashNow || "tapWhenWhite";
+    state.inductionArcade.startingGame =
+      startingFromHashNow || DEFAULT_STARTING_GAME;
     state.inductionArcade.gameOrder = getGameOrder(
       state.inductionArcade.startingGame
     );
 
+    setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
+      lastAffirmation: "",
+      currentGameId: null,
+      nextGameId: null,
+    });
+
     onArcadeReady((scene) => {
       scene.setMode("idle");
     });
-
-    emitter.emit("render");
   });
 
   emitter.on("inductionArcade/exit", () => {
     if (!state.inductionArcade.active) return;
 
     state.inductionArcade.active = false;
-    state.inductionArcade.phase = "headphones";
-    stopBinauralBeat();
-    resetBeatState(state);
-    state.inductionArcade.currentGameId = null;
-    state.inductionArcade.nextGameId = null;
-    resetIntermissionSurvey(state);
+    setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
+      currentGameId: null,
+      nextGameId: null,
+    });
 
     onArcadeReady((scene) => {
       scene.setMode("idle");
     });
-
-    emitter.emit("render");
   });
 
   // First: headphones → intro
   emitter.on("inductionArcade/confirmHeadphones", async () => {
-    state.inductionArcade.phase = "intro";
-    state.inductionArcade.lastAffirmation = "";
-    state.inductionArcade.currentGameId = null;
-    state.inductionArcade.nextGameId = null;
-    stopBinauralBeat();
-    resetBeatState(state);
-    resetIntermissionSurvey(state);
+    setInductionArcadePhase(state, emitter, PHASES.INTRO, {
+      lastAffirmation: "",
+      currentGameId: null,
+      nextGameId: null,
+    });
 
     // Prime Tone.js while we still have a user gesture so iOS Safari will
     // allow audio playback when the game starts.
@@ -404,8 +444,6 @@ export default function inductionArcadeStore(state, emitter) {
     onArcadeReady((scene) => {
       scene.setMode("idle");
     });
-
-    emitter.emit("render");
   });
 
   // User presses "I am ready to begin" on the *intro* card
@@ -431,18 +469,14 @@ export default function inductionArcadeStore(state, emitter) {
     state.inductionArcade.gameOrder = getGameOrder(
       state.inductionArcade.startingGame
     );
-    state.inductionArcade.currentGameId = null;
-    state.inductionArcade.nextGameId = state.inductionArcade.gameOrder[0];
-    state.inductionArcade.phase = "instructions";
-    state.inductionArcade.lastAffirmation = "";
-    resetIntermissionSurvey(state);
+    const nextGameId = state.inductionArcade.gameOrder[0];
 
-    // Reset env (and thus spiral) only once at the start of the sequence
-    state.inductionArcade.env = {
-      depthLevel: 0,
-      spiralIntensity: BASE_SPIRAL_INTENSITY,
-      beatIntensity: 0.3,
-    };
+    setInductionArcadePhase(state, emitter, PHASES.INSTRUCTIONS, {
+      currentGameId: null,
+      nextGameId,
+      lastAffirmation: "",
+      env: { ...DEFAULT_ENV },
+    });
 
     const frequencies = calculateBeatFrequencies(
       state.inductionArcade.env.depthLevel
@@ -481,9 +515,11 @@ export default function inductionArcadeStore(state, emitter) {
 
     const isFinal = gameOrder[gameOrder.length - 1] === nextGameId;
 
-    state.inductionArcade.currentGameId = nextGameId;
-    state.inductionArcade.phase = "game";
-    state.inductionArcade.lastAffirmation = "";
+    setInductionArcadePhase(state, emitter, PHASES.GAME, {
+      currentGameId: nextGameId,
+      nextGameId,
+      lastAffirmation: "",
+    });
 
     onArcadeReady((scene) => {
       if (scene.mode !== "inductionArcade") {
@@ -500,7 +536,5 @@ export default function inductionArcadeStore(state, emitter) {
         scene.startMinigame(nextGameId, { final: isFinal });
       }
     });
-
-    emitter.emit("render");
   });
 }
