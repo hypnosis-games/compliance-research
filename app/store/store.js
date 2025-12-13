@@ -15,9 +15,18 @@ function applyPatch(state, emitter, key, patch) {
   emitter.emit("render");
 }
 
+function getHashForModule(moduleName) {
+  if (moduleName === "induction-arcade") {
+    return "task-phase";
+  }
+
+  return moduleName;
+}
+
 function pushModuleRoute(emitter, moduleName, resolver) {
   const target = resolver(moduleName);
-  emitter.emit("pushState", `#${target}`);
+  const hashTarget = getHashForModule(target);
+  emitter.emit("pushState", `#${hashTarget}`);
 }
 
 export default function store(state, emitter) {
