@@ -274,7 +274,7 @@ function normalizeGameId(raw) {
 
 /**
  * Read the starting game from the URL hash, e.g.:
- *   #induction-arcade?game=follow-the-fade
+ *   #task-phase?game=follow-the-fade
  */
 function parseStartingGameFromHash() {
   if (typeof window === "undefined") return null;
