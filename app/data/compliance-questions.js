@@ -1,3 +1,7 @@
+/*
+/app/data/compliance-questions.js
+Provides the compliance question set used throughout the induction arcade assessments.
+*/
 // data/compliance-questions.js
 export const complianceInstructions = [
   "Please read each item aloud slowly and carefully before answering.",

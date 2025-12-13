@@ -1,3 +1,7 @@
+/*
+/app/views/layouts/pre-test-survey.js
+Constructs the layout for the pre-test survey including navigation controls.
+*/
 // views/pre-test-survey.js
 import { ContentDirector } from "../../directors/content-director.js";
 

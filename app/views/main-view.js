@@ -1,3 +1,7 @@
+/*
+/app/views/main-view.js
+Composes the primary view routing logic that switches between layout components.
+*/
 // views/main-view.js 
 import layoutsDictionary from "./layouts/layouts-dictionary.js";
 

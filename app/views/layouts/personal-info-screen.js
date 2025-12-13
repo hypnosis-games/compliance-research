@@ -1,3 +1,7 @@
+/*
+/app/views/layouts/personal-info-screen.js
+Renders the personal information form for collecting participant details.
+*/
 const genders = ["male", "female", "non-binary", "agender"];
 const modalities = ["cisgender", "transgender", "other"];
 

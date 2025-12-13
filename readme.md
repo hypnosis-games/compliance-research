@@ -1,3 +1,7 @@
+/*
+/readme.md
+Overview and usage guidance for the compliance research induction arcade project.
+*/
 # 🌀 Cognitive Conditioning Research Study 🌀
 
 _A hypnotic web experience_

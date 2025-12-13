@@ -1,3 +1,7 @@
+/*
+/app/views/partials/intermission-survey.js
+Displays the intermission survey interface between induction arcade sessions.
+*/
 // views/partials/intermission-survey.js
 export default function IntermissionSurvey({ survey = {}, emit }) {
   const {

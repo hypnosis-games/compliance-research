@@ -1,3 +1,7 @@
+/*
+/app/audio/binaural-beat.js
+Generates configurable binaural beat audio for induction sequences using Tone.js.
+*/
 const DEFAULT_LEFT_FREQUENCY = 220;
 const DEFAULT_RIGHT_FREQUENCY = 230;
 const DEFAULT_GAIN = 0.08;

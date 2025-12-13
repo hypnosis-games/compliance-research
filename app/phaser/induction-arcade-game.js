@@ -1,3 +1,7 @@
+/*
+/app/phaser/induction-arcade-game.js
+Coordinates initialization of Phaser scenes and audio for the induction arcade.
+*/
 // phaser/induction-arcade-game.js
 import InductionArcadeScene from "./induction-arcade-scene.js";
 import SpiralPostFXPipeline from "./spiral-postfx-pipeline.js";

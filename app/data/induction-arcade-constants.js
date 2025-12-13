@@ -1,3 +1,7 @@
+/*
+/app/data/induction-arcade-constants.js
+Defines constants and configuration values shared across induction arcade components.
+*/
 export const PHASES = Object.freeze({
   HEADPHONES: "headphones",
   INTRO: "intro",

@@ -1,3 +1,7 @@
+/*
+/app/views/layouts/induction-arcade.js
+Defines the layout for the induction arcade game interface and supporting elements.
+*/
 // views/induction-arcade.js
 import IntermissionSurvey from "../partials/intermission-survey.js";
 import InterjectionCard from "../partials/interjection-card.js";

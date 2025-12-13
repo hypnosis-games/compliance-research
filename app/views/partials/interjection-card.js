@@ -1,3 +1,7 @@
+/*
+/app/views/partials/interjection-card.js
+Renders interjection cards that surface feedback or guidance during gameplay.
+*/
 export default function InterjectionCard({ interjection = {}, emit }) {
   const { steps = [], currentIndex = 0, type = "focus" } = interjection;
   if (!steps.length) return null;

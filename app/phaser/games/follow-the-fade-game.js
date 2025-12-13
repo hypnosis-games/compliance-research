@@ -1,3 +1,7 @@
+/*
+/app/phaser/games/follow-the-fade-game.js
+Implements the Follow the Fade mini-game logic and rendering for the induction arcade.
+*/
 // phaser/games/follow-the-fade-game.js
 
 const DOT_TEXTURE_KEY = "followFadeDot";

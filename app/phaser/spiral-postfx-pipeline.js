@@ -1,3 +1,7 @@
+/*
+/app/phaser/spiral-postfx-pipeline.js
+Implements a custom Phaser post-processing pipeline for spiral visual effects.
+*/
 // phaser/spiral-postfx-pipeline.js
 export default class SpiralPostFXPipeline extends Phaser.Renderer.WebGL
   .Pipelines.PostFXPipeline {
