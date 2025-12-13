@@ -220,7 +220,7 @@ export const interjectionStepsByType = {
     1: [
       "Breathe in and let the instruction settle.",
       "Focus on the screen ahead.",
-      "Notice the way you wait for the task.",
+      "Notice how it feels to wait for the task.",
     ],
     2: [
       "Exhale and let thinking fade.",
@@ -277,6 +277,12 @@ export const interjectionStepsByType = {
   },
   wakener: {
     5: [
+      "Coming back now.",
+      "Starting to wake up.",
+      "Feel energy returning to your body.",
+      "Nice and easy.",
+      "Slowly waking up now.",
+      "Come back feeling refreshed.",
       "Let your eyes brighten as you return to full awareness.",
       "Breathe in and feel energy filling every part of you.",
       "Stretch gently and notice how refreshed and alert you are becoming.",

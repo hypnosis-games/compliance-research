@@ -16,7 +16,7 @@ export default class FocusExerciseGame {
     this.pulseTween = null;
     this.instructionTimer = null;
     this.instructionLines = [
-      "Focus on the dot",
+      "Focus on the circle",
       "Watch it pulse",
       "Breathe in while it grows",
       "Breathe out while it shrinks",
@@ -39,7 +39,7 @@ export default class FocusExerciseGame {
     if (!scene.textures.exists(DOT_TEXTURE_KEY)) {
       const graphics = scene.add.graphics();
       const textureRadius = 80;
-      graphics.fillStyle(0xffffff, 1);
+      graphics.fillStyle(0xaaaaaa, 1);
       graphics.fillCircle(textureRadius, textureRadius, textureRadius);
       graphics.generateTexture(DOT_TEXTURE_KEY, textureRadius * 2, textureRadius * 2);
       graphics.destroy();
