@@ -89,7 +89,7 @@ export default function PreTestSurvey(state, emit) {
           selectedValue: null,
           selectedQuestionId: null,
         });
-        emit("navigateToModule", "induction-arcade");
+        emit("nav/goToModule", "induction-arcade");
       } else {
         emit("preTestSurvey/update", {
           currentIndex: nextIndex,
