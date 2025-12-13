@@ -24,16 +24,15 @@ import {
   BASE_SPIRAL_INTENSITY,
   BEAT_INTENSITY_BASE,
   BEAT_INTENSITY_SCALE,
-  DEFAULT_STARTING_GAME,
   DEPTH_INCREMENT_PER_SUCCESS,
   DEPTH_INCREMENT_PER_POSITIVE_SURVEY,
   DEPTH_INCREMENT_PER_RELAXATION_MS,
-  GAME_IDS,
   MAX_DEPTH_LEVEL,
-  PHASES,
   SPIRAL_SCALE_PER_DEPTH,
   TIMING,
 } from "../data/induction-arcade-constants.js";
+import { GAME_IDS, DEFAULT_STARTING_GAME } from "../data/induction-arcade-game-ids.js";
+import { PHASES } from "../data/induction-arcade-phases.js";
 import { ContentDirector } from "../directors/content-director.js";
 
 // ----------------- Helpers -----------------
