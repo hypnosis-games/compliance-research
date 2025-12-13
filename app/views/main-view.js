@@ -9,9 +9,11 @@ export default function MainView(state, emit) {
   console.log("MainView state:", state);
   const startModule = state.startModule || Object.keys(layoutsDictionary)[0];
   const requestedModule = state.params && state.params.module;
+  const normalizedRequestedModule =
+    requestedModule === "task-phase" ? "induction-arcade" : requestedModule;
   console.log("Requested module:", requestedModule);
-  const moduleName = layoutsDictionary[requestedModule]
-    ? requestedModule
+  const moduleName = layoutsDictionary[normalizedRequestedModule]
+    ? normalizedRequestedModule
     : startModule;
 
   const CurrentLayout = layoutsDictionary[moduleName];
