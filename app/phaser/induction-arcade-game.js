@@ -10,40 +10,18 @@ import SpiralPostFXPipeline, {
 
 let arcadeGame = null;
 let arcadeScene = null;
-let readyCallbacks = [];
 
-function handleSceneReady(sceneInstance, onGameEvent) {
-  arcadeScene = sceneInstance;
+let resolveArcadeSceneReady = null;
+let arcadeSceneReadyPromise = null;
 
-  if (arcadeScene && onGameEvent) {
-    arcadeScene.externalEventHandler = onGameEvent;
-  }
+function getOrCreateArcadeSceneReadyPromise() {
+  if (arcadeSceneReadyPromise) return arcadeSceneReadyPromise;
 
-  if (arcadeScene && readyCallbacks.length) {
-    readyCallbacks.forEach((cb) => cb(arcadeScene));
-    readyCallbacks = [];
-  }
-}
-
-function listenForSceneReady(onGameEvent) {
-  const sceneInstance = arcadeGame?.scene?.keys?.["InductionArcadeScene"];
-
-  if (!sceneInstance) return;
-
-  const scenePlugin = sceneInstance.scene;
-  const sceneIsActive =
-    scenePlugin && typeof scenePlugin.isActive === "function"
-      ? scenePlugin.isActive()
-      : false;
-
-  if (sceneIsActive) {
-    handleSceneReady(sceneInstance, onGameEvent);
-    return;
-  }
-
-  sceneInstance.events.once("ready", () => {
-    handleSceneReady(sceneInstance, onGameEvent);
+  arcadeSceneReadyPromise = new Promise((resolve) => {
+    resolveArcadeSceneReady = resolve;
   });
+
+  return arcadeSceneReadyPromise;
 }
 
 // ----------------- Sizing helpers -----------------
@@ -83,14 +61,11 @@ function resizeCanvas(game) {
 
 // ----------------- Arcade init / accessors -----------------
 
-export function initArcadeGame({ onGameEvent } = {}) {
-  if (arcadeGame) {
-    // already created
-    if (arcadeScene && onGameEvent) {
-      arcadeScene.externalEventHandler = onGameEvent;
-    }
-    return { game: arcadeGame, scene: arcadeScene };
-  }
+export function initArcadeGame() {
+  if (arcadeGame) return { game: arcadeGame, scene: arcadeScene };
+
+  // create the promise *before* Phaser boots, so any awaiters are safe
+  getOrCreateArcadeSceneReadyPromise();
 
   const { width, height } = calculateGameDimensions();
 
@@ -100,10 +75,7 @@ export function initArcadeGame({ onGameEvent } = {}) {
     height,
     parent: "game",
     backgroundColor: "#000000",
-    scale: {
-      mode: Phaser.Scale.NONE,
-    },
-    // Register the spiral as a PostFX pipeline so the scene can use camera.setPostPipeline(SPIRAL_PIPELINE_KEY)
+    scale: { mode: Phaser.Scale.NONE },
     pipeline: {
       [SPIRAL_PIPELINE_KEY]: SpiralPostFXPipeline,
     },
@@ -113,21 +85,46 @@ export function initArcadeGame({ onGameEvent } = {}) {
   arcadeGame = new Phaser.Game(config);
   resizeCanvas(arcadeGame);
 
-  listenForSceneReady(onGameEvent);
-
   window.addEventListener("resize", () => resizeCanvas(arcadeGame));
 
   return { game: arcadeGame, scene: arcadeScene };
+}
+
+/**
+ * Called exactly once by InductionArcadeScene.create().
+ * This is the only "bridge" we need.
+ */
+export function registerArcadeScene(sceneInstance) {
+  arcadeScene = sceneInstance;
+
+  if (resolveArcadeSceneReady) {
+    const resolveNow = resolveArcadeSceneReady;
+    resolveArcadeSceneReady = null;
+    resolveNow(sceneInstance);
+  }
 }
 
 export function getArcadeScene() {
   return arcadeScene;
 }
 
-export function onArcadeReady(cb) {
+/**
+ * Deterministic: if the scene exists, returns immediately;
+ * otherwise waits until the scene calls registerArcadeScene().
+ */
+export async function ensureArcadeSceneReady() {
+  if (arcadeScene) return arcadeScene;
+
+  initArcadeGame();
+  const promise = getOrCreateArcadeSceneReadyPromise();
+  return promise;
+}
+
+/**
+ * Optional helper: set / replace the event handler whenever you want.
+ */
+export function setArcadeExternalEventHandler(onGameEvent) {
   if (arcadeScene) {
-    cb(arcadeScene);
-  } else {
-    readyCallbacks.push(cb);
+    arcadeScene.externalEventHandler = onGameEvent || null;
   }
 }

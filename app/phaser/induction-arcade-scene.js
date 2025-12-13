@@ -6,6 +6,7 @@ Defines the primary Phaser scene orchestrating visual effects and game progressi
 import TapWhenWhiteGame from "./games/tap-when-white-game.js";
 import FollowTheFadeGame from "./games/follow-the-fade-game.js";
 import { SPIRAL_PIPELINE_KEY } from "./spiral-postfx-pipeline.js";
+import { registerArcadeScene } from "./induction-arcade-game.js";
 
 export default class InductionArcadeScene extends Phaser.Scene {
   constructor() {
@@ -25,7 +26,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     this.createIdleBackground();
 
-    this.events.emit("ready");
+    registerArcadeScene(this);
     console.log("InductionArcadeScene created");
   }
 

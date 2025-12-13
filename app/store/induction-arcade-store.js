@@ -5,7 +5,8 @@ Handles game lifecycle state and user progress for the induction arcade experien
 // store/induction-arcade-store.js
 import {
   initArcadeGame,
-  onArcadeReady,
+  ensureArcadeSceneReady,
+  setArcadeExternalEventHandler,
 } from "../phaser/induction-arcade-game.js";
 import {
   DEFAULT_LEFT_FREQUENCY,
@@ -314,7 +315,7 @@ export default function inductionArcadeStore(state, emitter) {
 
   // ---- Game events coming from Phaser ----
 
-  emitter.on("inductionArcade/gameEvent", (evt) => {
+  emitter.on("inductionArcade/gameEvent", async (evt) => {
     const { type, payload } = evt;
     console.log("Game event from Phaser:", type, payload);
 
@@ -353,13 +354,12 @@ export default function inductionArcadeStore(state, emitter) {
         emitter.emit("render");
       }, TIMING.AFFIRMATION_CLEAR_MS);
 
-      onArcadeReady((scene) => {
-        if (scene.setSpiralOpacity) {
-          scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
-            duration: 600,
-          });
-        }
-      });
+      const scene = await ensureArcadeSceneReady();
+      if (scene.setSpiralOpacity) {
+        scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
+          duration: 600,
+        });
+      }
 
       emitter.emit("render");
     }
@@ -391,13 +391,12 @@ export default function inductionArcadeStore(state, emitter) {
         );
 
         // Re-assert spiral at current env intensity while showing survey/instructions
-        onArcadeReady((scene) => {
-          if (scene.setSpiralOpacity) {
-            scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
-              duration: 800,
-            });
-          }
-        });
+        const scene = await ensureArcadeSceneReady();
+        if (scene.setSpiralOpacity) {
+          scene.setSpiralOpacity(state.inductionArcade.env.spiralIntensity, {
+            duration: 800,
+          });
+        }
       }
 
       emitter.emit("render");
@@ -500,13 +499,19 @@ export default function inductionArcadeStore(state, emitter) {
 
   // ---- Lifecycle / navigation ----
 
-  emitter.on("inductionArcade/enter", () => {
+  emitter.on("inductionArcade/enter", async () => {
     if (state.inductionArcade.active) return;
 
-    // ✅ create game if needed + wire Phaser → store events
-    initArcadeGame({
-      onGameEvent: (evt) => emitter.emit("inductionArcade/gameEvent", evt),
-    });
+    // create game if needed + wire Phaser → store events
+    initArcadeGame();
+
+    const onGameEvent = (evt) => emitter.emit("inductionArcade/gameEvent", evt);
+
+    // set immediately if ready, otherwise when the scene registers itself
+    setArcadeExternalEventHandler(onGameEvent);
+
+    const scene = await ensureArcadeSceneReady();
+    scene.externalEventHandler = onGameEvent;
 
     const startingFromHashNow = parseStartingGameFromHash();
     state.inductionArcade.active = true;
@@ -522,13 +527,11 @@ export default function inductionArcadeStore(state, emitter) {
       nextGameId: null,
     });
 
-    onArcadeReady((scene) => {
-      console.log("STORE: onArcadeReady fired");
-      scene.setMode("idle");
-    });
+    console.log("STORE: inductionArcade/enter scene ready");
+    scene.setMode("idle");
   });
 
-  emitter.on("inductionArcade/exit", () => {
+  emitter.on("inductionArcade/exit", async () => {
     if (!state.inductionArcade.active) return;
 
     state.inductionArcade.active = false;
@@ -537,9 +540,8 @@ export default function inductionArcadeStore(state, emitter) {
       nextGameId: null,
     });
 
-    onArcadeReady((scene) => {
-      scene.setMode("idle");
-    });
+    const scene = await ensureArcadeSceneReady();
+    scene.setMode("idle");
   });
 
   // First: headphones → intro
@@ -554,9 +556,8 @@ export default function inductionArcadeStore(state, emitter) {
     // allow audio playback when the game starts.
     await warmBinauralBeatContext();
 
-    onArcadeReady((scene) => {
-      scene.setMode("idle");
-    });
+    const scene = await ensureArcadeSceneReady();
+    scene.setMode("idle");
   });
 
   // User presses "I am ready to begin" on the *intro* card
@@ -607,15 +608,14 @@ export default function inductionArcadeStore(state, emitter) {
       };
     }
 
-    onArcadeReady((scene) => {
-      scene.setMode("inductionArcade", {
-        spiralOpacity: state.inductionArcade.env.spiralIntensity,
-        spiralFadeIn: false,
-        spiralFadeDuration: 1200,
-        autoStart: false,
-        initialGame: state.inductionArcade.nextGameId,
-        final: state.inductionArcade.gameOrder.length === 1,
-      });
+    const scene = await ensureArcadeSceneReady();
+    scene.setMode("inductionArcade", {
+      spiralOpacity: state.inductionArcade.env.spiralIntensity,
+      spiralFadeIn: false,
+      spiralFadeDuration: 1200,
+      autoStart: false,
+      initialGame: state.inductionArcade.nextGameId,
+      final: state.inductionArcade.gameOrder.length === 1,
     });
 
     emitter.emit("inductionArcade/beginCurrentGame");
@@ -623,7 +623,7 @@ export default function inductionArcadeStore(state, emitter) {
   });
 
   // User presses "Start round X" for the current game
-  emitter.on("inductionArcade/beginCurrentGame", () => {
+  emitter.on("inductionArcade/beginCurrentGame", async () => {
     const { nextGameId, gameOrder } = state.inductionArcade;
     if (!nextGameId) return;
 
@@ -635,20 +635,19 @@ export default function inductionArcadeStore(state, emitter) {
       lastAffirmation: "",
     });
 
-    onArcadeReady((scene) => {
-      if (scene.mode !== "inductionArcade") {
-        scene.setMode("inductionArcade", {
-          spiralOpacity: state.inductionArcade.env.spiralIntensity,
-          spiralFadeIn: true,
-          spiralFadeDuration: 1200,
-          autoStart: false,
-          initialGame: nextGameId,
-          final: isFinal,
-        });
-      }
-      if (scene.startMinigame) {
-        scene.startMinigame(nextGameId, { final: isFinal });
-      }
-    });
+    const scene = await ensureArcadeSceneReady();
+    if (scene.mode !== "inductionArcade") {
+      scene.setMode("inductionArcade", {
+        spiralOpacity: state.inductionArcade.env.spiralIntensity,
+        spiralFadeIn: true,
+        spiralFadeDuration: 1200,
+        autoStart: false,
+        initialGame: nextGameId,
+        final: isFinal,
+      });
+    }
+    if (scene.startMinigame) {
+      scene.startMinigame(nextGameId, { final: isFinal });
+    }
   });
 }
