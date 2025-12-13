@@ -139,7 +139,11 @@ function normalizeGameId(raw) {
   const str = `${raw}`.trim();
 
   // Already-normalized IDs
-  if (str === GAME_IDS.TAP_WHEN_WHITE || str === GAME_IDS.FOLLOW_THE_FADE) {
+  if (
+    str === GAME_IDS.TAP_WHEN_WHITE ||
+    str === GAME_IDS.FOLLOW_THE_FADE ||
+    str === GAME_IDS.FOCUS_EXERCISE
+  ) {
     return str;
   }
 
@@ -150,6 +154,7 @@ function normalizeGameId(raw) {
 
   if (normalized === "tap-when-white") return "tapWhenWhite";
   if (normalized === "follow-the-fade") return "followTheFade";
+  if (normalized === "focus-exercise") return "focusExercise";
 
   return null;
 }
@@ -172,12 +177,26 @@ function parseStartingGameFromHash() {
 function getGameOrder(startingGame) {
   const start = normalizeGameId(startingGame);
 
+  const baseOrder = [
+    GAME_IDS.TAP_WHEN_WHITE,
+    GAME_IDS.FOLLOW_THE_FADE,
+    GAME_IDS.FOCUS_EXERCISE,
+  ];
+
   if (start === GAME_IDS.FOLLOW_THE_FADE) {
-    return [GAME_IDS.FOLLOW_THE_FADE, GAME_IDS.TAP_WHEN_WHITE];
+    return [
+      GAME_IDS.FOLLOW_THE_FADE,
+      GAME_IDS.FOCUS_EXERCISE,
+      GAME_IDS.TAP_WHEN_WHITE,
+    ];
   }
 
-  // Default: tapWhenWhite first, then followTheFade
-  return [GAME_IDS.TAP_WHEN_WHITE, GAME_IDS.FOLLOW_THE_FADE];
+  if (start === GAME_IDS.FOCUS_EXERCISE) {
+    return [GAME_IDS.FOCUS_EXERCISE];
+  }
+
+  // Default: tapWhenWhite first, then followTheFade, then focusExercise
+  return baseOrder;
 }
 
 function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {

@@ -5,6 +5,7 @@ Defines the primary Phaser scene orchestrating visual effects and game progressi
 // phaser/induction-arcade-scene.js
 import TapWhenWhiteGame from "./games/tap-when-white-game.js";
 import FollowTheFadeGame from "./games/follow-the-fade-game.js";
+import FocusExerciseGame from "./games/focus-exercise-game.js";
 import { SPIRAL_PIPELINE_KEY } from "./spiral-postfx-pipeline.js";
 import { registerArcadeScene } from "./induction-arcade-game.js";
 
@@ -155,6 +156,11 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     if (gameId === "followTheFade") {
       this.startFollowTheFade({ final });
+      return;
+    }
+
+    if (gameId === "focusExercise") {
+      this.startFocusExercise({ final });
     }
   }
 
@@ -177,6 +183,19 @@ export default class InductionArcadeScene extends Phaser.Scene {
       },
       onSuccess: (payload) => {
         this.handleMinigameSuccess("tapWhenWhite", payload);
+      },
+    });
+  }
+
+  startFocusExercise({ final = true } = {}) {
+    this.clearCurrentMinigame();
+
+    this.currentMinigame = new FocusExerciseGame(this, {
+      onComplete: (result) => {
+        this.handleMinigameComplete("focusExercise", result, { final });
+      },
+      onSuccess: (payload) => {
+        this.handleMinigameSuccess("focusExercise", payload);
       },
     });
   }

@@ -15,11 +15,12 @@ export const PHASES = Object.freeze({
 export const GAME_IDS = Object.freeze({
   TAP_WHEN_WHITE: "tapWhenWhite",
   FOLLOW_THE_FADE: "followTheFade",
+  FOCUS_EXERCISE: "focusExercise",
 });
 
 export const BASE_SPIRAL_INTENSITY = 0.01;
 export const DEPTH_INCREMENT_PER_SUCCESS = .1;
-export const MAX_DEPTH_LEVEL = 3;
+export const MAX_DEPTH_LEVEL = 5;
 export const SPIRAL_SCALE_PER_DEPTH = 0.1;
 export const BEAT_INTENSITY_BASE = 0.3;
 export const BEAT_INTENSITY_SCALE = 0.2;
