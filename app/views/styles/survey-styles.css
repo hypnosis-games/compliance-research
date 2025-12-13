@@ -2,6 +2,7 @@
 /app/views/styles/survey-styles.css
 Stylesheet defining layout and typography for survey and questionnaire screens.
 */
+
 .pretest-container {
   margin: 0 auto;
 }
@@ -20,24 +21,35 @@ Stylesheet defining layout and typography for survey and questionnaire screens.
   transition: width 0.3s ease-out;
 }
 
+.pretest-container .screen-card,
 .intermission-survey-shell .screen-card {
   background:
     radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08), transparent 70%),
     radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.10), transparent 28%),
     rgba(11, 18, 32, 0.30);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
 }
 
 
+
+.pretest-container .screen-title,
+.pretest-container .screen-subtitle,
+.pretest-container .pretest-page-indicator,
 .intermission-survey-shell .screen-title,
 .intermission-survey-shell .screen-subtitle,
 .intermission-survey-shell .pretest-page-indicator {
   color: #e2e8f0;
 }
 
+
+.pretest-container .gray,
 .intermission-survey-shell .gray {
   color: #cbd5e1;
 }
 
+.pretest-container .instruction-line,
 .intermission-survey-shell .instruction-line {
   color: #cbd5e1;
   letter-spacing: 0.01em;
