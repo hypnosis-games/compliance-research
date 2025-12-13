@@ -478,6 +478,7 @@ export default function inductionArcadeStore(state, emitter) {
         : ContentDirector.getTaskAffirmation({
             depth: ContentDirector.getDepthBucket(newDepth),
             outcome: "success",
+            previousSelection: state.inductionArcade.lastAffirmation,
           });
 
       state.inductionArcade.lastAffirmation = affirmation;
@@ -589,6 +590,7 @@ export default function inductionArcadeStore(state, emitter) {
     const fullAffirmation = ContentDirector.getSurveyAffirmation({
       depth: ContentDirector.getDepthBucket(depthAfterSurvey),
       isPositive: isPraise,
+      previousSelection: survey.lastAffirmation,
     });
 
     const nextIndex = survey.currentIndex + 1;

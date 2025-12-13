@@ -44,6 +44,7 @@ export default function PreTestSurvey(state, emit) {
     const fullAffirmation = ContentDirector.getSurveyAffirmation({
       depth: state.conditioning?.depth || 0,
       isPositive,
+      previousSelection: lastAffirmation,
     });
 
     const nextIndex = currentIndex + 1;

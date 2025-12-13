@@ -22,27 +22,34 @@ function getDepthBucket(rawDepth = 0) {
   return Math.round(clampedDepth);
 }
 
-function pickRandom(items = []) {
+function pickRandom(items = [], previousSelection = "") {
   if (!items.length) return "";
-  const index = Math.floor(Math.random() * items.length);
-  return items[index];
+
+  const candidates = items.filter((item) => item !== previousSelection);
+  const pool = candidates.length ? candidates : items;
+  const index = Math.floor(Math.random() * pool.length);
+  return pool[index];
 }
 
-function getTaskAffirmation({ depth = 0 } = {}) {
+function getTaskAffirmation({ depth = 0, previousSelection = "" } = {}) {
   const normalizedDepth = getDepthBucket(depth);
   const bank = taskAffirmationsByOutcome.success[normalizedDepth]
     ? taskAffirmationsByOutcome.success[normalizedDepth]
     : taskAffirmationsByOutcome.success[0];
-  return pickRandom(bank);
+  return pickRandom(bank, previousSelection);
 }
 
-function getSurveyAffirmation({ depth = 0, isPositive = false } = {}) {
+function getSurveyAffirmation({
+  depth = 0,
+  isPositive = false,
+  previousSelection = "",
+} = {}) {
   const normalizedDepth = getDepthBucket(depth);
   const toneKey = isPositive ? "positive" : "neutral";
   const bank = surveyAffirmationsByTone[toneKey][normalizedDepth]
     ? surveyAffirmationsByTone[toneKey][normalizedDepth]
     : surveyAffirmationsByTone[toneKey][0];
-  return pickRandom(bank);
+  return pickRandom(bank, previousSelection);
 }
 
 function selectSurveyStatements(depth, count) {
