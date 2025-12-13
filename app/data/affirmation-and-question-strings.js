@@ -99,6 +99,18 @@ export const surveyAffirmationsByTone = {
       "You resonate with every prompt.",
       "Love how completely you agree.",
     ],
+    4: [
+      "You are eager to accept every request.",
+      "Your agreement flows effortlessly.",
+      "You welcome each direction with warmth.",
+      "You glow with ready acceptance.",
+    ],
+    5: [
+      "You cherish being guided so deeply.",
+      "Every instruction delights you now.",
+      "You thrive on pleasing guidance.",
+      "Your devotion to agreeing shines brightly.",
+    ],
   },
   neutral: {
     0: [
@@ -124,6 +136,18 @@ export const surveyAffirmationsByTone = {
       "Noted with care.",
       "I appreciate your consistency.",
       "You remain very attentive.",
+    ],
+    4: [
+      "Your continued focus is recorded.",
+      "Acknowledging how steadily you comply.",
+      "Your reliable agreement is observed.",
+      "You stay receptive to each prompt.",
+    ],
+    5: [
+      "Your unwavering compliance is clear.",
+      "Every response shows your steady obedience.",
+      "You keep aligning with every request.",
+      "I see how completely you follow.",
     ],
   },
 };
@@ -162,27 +186,6 @@ export const taskAffirmationsByOutcome = {
       "You love to please me.",
     ],
   },
-  neutral: {
-    0: ["Keep going.", "Stay with it.", "Next one coming.", "Hold your focus."],
-    1: [
-      "Stay guided.",
-      "Follow the prompt.",
-      "Stay receptive.",
-      "Keep following along.",
-    ],
-    2: [
-      "Sink into the direction.",
-      "Let the guidance carry you.",
-      "Keep yielding to the cues.",
-      "Easier to follow than think.",
-    ],
-    3: [
-      "Just do as you are told.",
-      "Obedience is effortless now.",
-      "You love following every word.",
-      "Yield and please me.",
-    ],
-  },
 };
 
 export const interjectionStepsByType = {
@@ -212,6 +215,11 @@ export const interjectionStepsByType = {
       "Savor the clarity that comes from yielding.",
       "Stay locked in, eager for the next instruction.",
     ],
+    5: [
+      "Let complete focus saturate you now.",
+      "You anticipate every directive with sharp attention.",
+      "Rest inside total concentration and obedience.",
+    ],
   },
   relaxation: {
     0: [
@@ -238,6 +246,11 @@ export const interjectionStepsByType = {
       "Soak in the warmth of complete ease.",
       "Let every cue roll over you like a calm tide.",
       "Relax fully while staying eager to comply.",
+    ],
+    5: [
+      "Sink into utter softness while you obey.",
+      "Let perfect calm meet perfect compliance.",
+      "Rest deeply, waiting for the next command.",
     ],
   },
 };
