@@ -31,7 +31,7 @@ export default class FocusExerciseGame {
     this.instructionIndex = 0;
     this.completedLoops = 0;
     this.targetLoops = 1;
-    this.instructionDelayMs = 3000;
+    this.instructionDelayMs = 2500;
 
     const { width, height } = scene.scale;
     const radius = Math.round(Math.min(width, height) * 0.06);
@@ -62,7 +62,7 @@ export default class FocusExerciseGame {
       align: "center",
     });
     this.instructionText.setOrigin(0.5, 0.5);
-    this.instructionText.setAlpha(0.85);
+    this.instructionText.setAlpha(0);
     scene.gameLayer.add(this.instructionText);
 
     this.beginPulseCycle();
@@ -88,13 +88,13 @@ export default class FocusExerciseGame {
         {
           scaleX: growTarget,
           scaleY: growTarget,
-          duration: 1500,
+          duration: 2500,
           ease: "Sine.easeInOut",
         },
         {
           scaleX: shrinkTarget,
           scaleY: shrinkTarget,
-          duration: 1500,
+          duration: 2500,
           ease: "Sine.easeInOut",
         },
       ],
