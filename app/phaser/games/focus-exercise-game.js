@@ -94,7 +94,7 @@ export default class FocusExerciseGame {
       this.pulseTween = null;
     }
 
-    this.pulseTween = this.scene.tweens.timeline({
+    this.pulseTween = this.scene.tweens.chain({
       targets: this.dot,
       tweens: [
         {
