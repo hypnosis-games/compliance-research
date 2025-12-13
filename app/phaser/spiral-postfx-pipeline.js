@@ -3,12 +3,14 @@
 Implements a custom Phaser post-processing pipeline for spiral visual effects.
 */
 // phaser/spiral-postfx-pipeline.js
+export const SPIRAL_PIPELINE_KEY = "SpiralPostFX";
+
 export default class SpiralPostFXPipeline extends Phaser.Renderer.WebGL
   .Pipelines.PostFXPipeline {
   constructor(game) {
     super({
       game,
-      name: "SpiralPostFX",
+      name: SPIRAL_PIPELINE_KEY,
       fragShader: `
         precision mediump float;
 

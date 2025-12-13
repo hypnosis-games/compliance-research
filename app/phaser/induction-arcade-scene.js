@@ -5,6 +5,7 @@ Defines the primary Phaser scene orchestrating visual effects and game progressi
 // phaser/induction-arcade-scene.js
 import TapWhenWhiteGame from "./games/tap-when-white-game.js";
 import FollowTheFadeGame from "./games/follow-the-fade-game.js";
+import { SPIRAL_PIPELINE_KEY } from "./spiral-postfx-pipeline.js";
 
 export default class InductionArcadeScene extends Phaser.Scene {
   constructor() {
@@ -45,15 +46,15 @@ export default class InductionArcadeScene extends Phaser.Scene {
     if (!this.cameras || !this.cameras.main) return null;
 
     const cam = this.cameras.main;
-    let pipeline = cam.getPostPipeline("SpiralPostFX");
+    let pipeline = cam.getPostPipeline(SPIRAL_PIPELINE_KEY);
 
     if (Array.isArray(pipeline)) {
       pipeline = pipeline[0];
     }
 
     if (!pipeline) {
-      cam.setPostPipeline("SpiralPostFX");
-      pipeline = cam.getPostPipeline("SpiralPostFX");
+      cam.setPostPipeline(SPIRAL_PIPELINE_KEY);
+      pipeline = cam.getPostPipeline(SPIRAL_PIPELINE_KEY);
       if (Array.isArray(pipeline)) {
         pipeline = pipeline[0];
       }
@@ -90,22 +91,33 @@ export default class InductionArcadeScene extends Phaser.Scene {
   }
 
   setMode(mode, config = {}) {
-    if (this.mode === mode) return;
+    const modeChanged = this.mode !== mode;
     this.mode = mode;
 
-    this.clearCurrentMinigame();
-
     if (mode === "idle") {
+      if (modeChanged) {
+        this.clearCurrentMinigame();
+      }
       this.createIdleBackground();
       return;
     }
 
     if (mode === "inductionArcade") {
-      this.startArcade(config);
+      const autoStart = config.autoStart ?? modeChanged;
+      const resetSequence = config.resetSequence ?? modeChanged;
+
+      if (modeChanged || autoStart) {
+        this.clearCurrentMinigame();
+      }
+
+      this.startArcade(
+        { ...config, autoStart },
+        { resetSequence }
+      );
     }
   }
 
-  startArcade(config) {
+  startArcade(config, { resetSequence = true } = {}) {
     const {
       spiralOpacity = 0.2,
       spiralFadeIn = false,
@@ -123,7 +135,9 @@ export default class InductionArcadeScene extends Phaser.Scene {
       this.setSpiralOpacity(spiralOpacity, { duration: 0 });
     }
 
-    this.sequenceStage = 0;
+    if (resetSequence) {
+      this.sequenceStage = 0;
+    }
 
     if (autoStart) {
       this.startMinigame(initialGame, { final });
