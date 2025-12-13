@@ -8,6 +8,16 @@ import {
 } from "../data/compliance-questions.js";
 
 export default function preTestSurveyStore(state, emitter) {
+  const applyPatch = state.applyPatch
+    ? (key, patch) => state.applyPatch(key, patch)
+    : (key, patch) => {
+        state[key] = {
+          ...(state[key] || {}),
+          ...patch,
+        };
+        emitter.emit("render");
+      };
+
   state.preTestSurvey = state.preTestSurvey || {};
   const s = state.preTestSurvey;
 
@@ -29,23 +39,17 @@ export default function preTestSurveyStore(state, emitter) {
   s.selectedQuestionId = s.selectedQuestionId || null;
 
   emitter.on("preTestSurvey/update", (payload) => {
-    state.preTestSurvey = {
-      ...state.preTestSurvey,
-      ...payload,
-    };
-    emitter.emit("render");
+    applyPatch("preTestSurvey", payload);
   });
 
   emitter.on("preTestSurvey/reset", () => {
-    state.preTestSurvey = {
-      ...state.preTestSurvey,
+    applyPatch("preTestSurvey", {
       currentIndex: 0,
       responses: {},
       lastAffirmation: "",
       animPhase: "idle",
       selectedValue: null,
       selectedQuestionId: null,
-    };
-    emitter.emit("render");
+    });
   });
 }
