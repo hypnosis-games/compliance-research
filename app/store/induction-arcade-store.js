@@ -419,12 +419,18 @@ export default function inductionArcadeStore(state, emitter) {
     console.log("Game event from Phaser:", type, payload);
 
     if (type === "minigame/success") {
+      const gameId = payload?.id;
+      const isRelaxationGame = gameId === GAME_IDS.FOCUS_EXERCISE;
       const newDepth = applyDepthDelta(state, DEPTH_INCREMENT_PER_SUCCESS);
 
-      state.inductionArcade.lastAffirmation = ContentDirector.getTaskAffirmation({
-        depth: ContentDirector.getDepthBucket(newDepth),
-        outcome: "success",
-      });
+      const affirmation = isRelaxationGame && payload?.instruction
+        ? payload.instruction
+        : ContentDirector.getTaskAffirmation({
+            depth: ContentDirector.getDepthBucket(newDepth),
+            outcome: "success",
+          });
+
+      state.inductionArcade.lastAffirmation = affirmation;
 
       clearAffirmationTimeout(state);
 
@@ -445,9 +451,11 @@ export default function inductionArcadeStore(state, emitter) {
     }
 
     if (type === "minigame/complete") {
-      const { final = true } = payload || {};
+      const { final = true, id: completedGameId } = payload || {};
+      const isRelaxation = completedGameId === GAME_IDS.FOCUS_EXERCISE;
+      const effectiveFinal = isRelaxation ? false : final;
 
-      if (final) {
+      if (effectiveFinal) {
         setInductionArcadePhase(state, emitter, PHASES.COMPLETE, {
           currentGameId: null,
           nextGameId: null,
@@ -458,7 +466,16 @@ export default function inductionArcadeStore(state, emitter) {
           state.inductionArcade.currentGameId
         );
         const nextIndex = currentIndex + 1;
-        const nextGame = state.inductionArcade.gameOrder[nextIndex] || null;
+        let nextGame = state.inductionArcade.gameOrder[nextIndex] || null;
+
+        if (isRelaxation) {
+          state.inductionArcade.gameOrder = [
+            GAME_IDS.TAP_WHEN_WHITE,
+            GAME_IDS.FOLLOW_THE_FADE,
+            GAME_IDS.FOCUS_EXERCISE,
+          ];
+          nextGame = GAME_IDS.TAP_WHEN_WHITE;
+        }
 
         setInductionArcadePhase(
           state,
