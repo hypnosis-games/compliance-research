@@ -3,7 +3,10 @@
 Handles game lifecycle state and user progress for the induction arcade experience.
 */
 // store/induction-arcade-store.js
-import { onArcadeReady } from "../phaser/induction-arcade-game.js";
+import {
+  initArcadeGame,
+  onArcadeReady,
+} from "../phaser/induction-arcade-game.js";
 import {
   DEFAULT_LEFT_FREQUENCY,
   DEFAULT_RIGHT_FREQUENCY,
@@ -500,6 +503,11 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/enter", () => {
     if (state.inductionArcade.active) return;
 
+    // ✅ create game if needed + wire Phaser → store events
+    initArcadeGame({
+      onGameEvent: (evt) => emitter.emit("inductionArcade/gameEvent", evt),
+    });
+
     const startingFromHashNow = parseStartingGameFromHash();
     state.inductionArcade.active = true;
     state.inductionArcade.startingGame =
@@ -515,6 +523,7 @@ export default function inductionArcadeStore(state, emitter) {
     });
 
     onArcadeReady((scene) => {
+      console.log("STORE: onArcadeReady fired");
       scene.setMode("idle");
     });
   });
