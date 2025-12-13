@@ -170,7 +170,7 @@ function registerCycleCompletion(state) {
   return state.inductionArcade.hasReachedMaxDepth && state.inductionArcade.cyclesAtMaxDepth >= 1;
 }
 
-function beginWakenerSequence(state, emitter) {
+async function beginWakenerSequence(state, emitter) {
   stopRelaxationDepthTimer(state);
   stopBinauralBeat();
   resetBeatState(state);
@@ -186,6 +186,16 @@ function beginWakenerSequence(state, emitter) {
     currentIndex: 0,
     nextType: "wakener",
   };
+
+  const scene = await ensureArcadeSceneReady();
+  if (scene) {
+    if (scene.setSpiralOpacity) {
+      scene.setSpiralOpacity(0, { duration: 600 });
+    }
+    if (scene.setBackgroundColor) {
+      scene.setBackgroundColor(0xd1d5db, 1);
+    }
+  }
 
   setInductionArcadePhase(state, emitter, PHASES.WAKENER, {
     interjection: state.inductionArcade.interjection,
@@ -507,7 +517,7 @@ export default function inductionArcadeStore(state, emitter) {
       if (isRelaxation) {
         const shouldWake = registerCycleCompletion(state);
         if (shouldWake) {
-          beginWakenerSequence(state, emitter);
+          await beginWakenerSequence(state, emitter);
           emitter.emit("render");
           return;
         }

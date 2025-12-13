@@ -17,6 +17,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
     this.currentMinigame = null;
     this.spiralTween = null;
     this.sequenceStage = 0;
+    this.backgroundGraphic = null;
   }
 
   preload() {}
@@ -34,11 +35,9 @@ export default class InductionArcadeScene extends Phaser.Scene {
   createIdleBackground() {
     // Simple black bg; spiral is handled by postFX
     this.bgLayer.removeAll(true);
-
-    const g = this.add.graphics();
-    g.fillStyle(0x000000, 1);
-    g.fillRect(0, 0, this.scale.width, this.scale.height);
-    this.bgLayer.add(g);
+    this.backgroundGraphic = this.add.graphics();
+    this.bgLayer.add(this.backgroundGraphic);
+    this.setBackgroundColor(0x000000, 1);
 
     // Idle spiral: very subtle
     this.setSpiralOpacity(0.01, { duration: 0 });
@@ -90,6 +89,22 @@ export default class InductionArcadeScene extends Phaser.Scene {
     } else {
       pipeline.setOverlay(clamped);
     }
+  }
+
+  setBackgroundColor(targetColor, alpha = 1) {
+    if (!this.backgroundGraphic) {
+      this.backgroundGraphic = this.add.graphics();
+      this.bgLayer.add(this.backgroundGraphic);
+    }
+
+    this.backgroundGraphic.clear();
+    this.backgroundGraphic.fillStyle(targetColor, alpha);
+    this.backgroundGraphic.fillRect(
+      0,
+      0,
+      this.scale.width,
+      this.scale.height
+    );
   }
 
   setMode(mode, config = {}) {
