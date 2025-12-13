@@ -5,14 +5,14 @@ export default function PersonalInfoScreen(state, emit) {
   function onsubmit(e) {
     e.preventDefault();
     const form = e.currentTarget;
-    emit("updatePersonalInfo", {
+    emit("personalInfo/update", {
       name: form.name.value,
       gender: form.gender.value,
       modality: form.modality.value,
       age: Number(form.age.value),
       consentGiven: form.consent.checked,
     });
-    emit("navigateToModule", "pre-test-survey");
+    emit("nav/goToModule", "pre-test-survey");
   }
 
   return html`

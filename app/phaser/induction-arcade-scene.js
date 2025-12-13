@@ -20,7 +20,7 @@ export default class InductionArcadeScene extends Phaser.Scene {
 
     this.createIdleBackground();
 
-    this.game.events.emit("ready");
+    this.events.emit("ready");
     console.log("InductionArcadeScene created");
   }
 

@@ -6,6 +6,40 @@ let arcadeGame = null;
 let arcadeScene = null;
 let readyCallbacks = [];
 
+function handleSceneReady(sceneInstance, onGameEvent) {
+  arcadeScene = sceneInstance;
+
+  if (arcadeScene && onGameEvent) {
+    arcadeScene.externalEventHandler = onGameEvent;
+  }
+
+  if (arcadeScene && readyCallbacks.length) {
+    readyCallbacks.forEach((cb) => cb(arcadeScene));
+    readyCallbacks = [];
+  }
+}
+
+function listenForSceneReady(onGameEvent) {
+  const sceneInstance = arcadeGame?.scene?.keys?.["InductionArcadeScene"];
+
+  if (!sceneInstance) return;
+
+  const scenePlugin = sceneInstance.scene;
+  const sceneIsActive =
+    scenePlugin && typeof scenePlugin.isActive === "function"
+      ? scenePlugin.isActive()
+      : false;
+
+  if (sceneIsActive) {
+    handleSceneReady(sceneInstance, onGameEvent);
+    return;
+  }
+
+  sceneInstance.events.once("ready", () => {
+    handleSceneReady(sceneInstance, onGameEvent);
+  });
+}
+
 // ----------------- Sizing helpers -----------------
 
 function calculateGameDimensions() {
@@ -71,19 +105,7 @@ export function initArcadeGame({ onGameEvent } = {}) {
   arcadeGame = new Phaser.Game(config);
   resizeCanvas(arcadeGame);
 
-  // wait until the scene has been created
-  arcadeGame.events.on("ready", () => {
-    arcadeScene = arcadeGame.scene.keys["InductionArcadeScene"];
-
-    if (arcadeScene && onGameEvent) {
-      arcadeScene.externalEventHandler = onGameEvent;
-    }
-
-    if (arcadeScene && readyCallbacks.length) {
-      readyCallbacks.forEach((cb) => cb(arcadeScene));
-      readyCallbacks = [];
-    }
-  });
+  listenForSceneReady(onGameEvent);
 
   window.addEventListener("resize", () => resizeCanvas(arcadeGame));
 

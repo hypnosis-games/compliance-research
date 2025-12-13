@@ -50,6 +50,27 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function clearIntermissionSurveyTimeouts(state) {
+  const timeoutIds = state.inductionArcade?.surveyTimeoutIds || [];
+  timeoutIds.forEach((timeoutId) => {
+    clearTimeout(timeoutId);
+  });
+  state.inductionArcade.surveyTimeoutIds = [];
+}
+
+function trackIntermissionSurveyTimeout(state, timeoutId) {
+  state.inductionArcade.surveyTimeoutIds = [
+    ...(state.inductionArcade.surveyTimeoutIds || []),
+    timeoutId,
+  ];
+}
+
+function removeIntermissionSurveyTimeout(state, timeoutId) {
+  state.inductionArcade.surveyTimeoutIds = (
+    state.inductionArcade.surveyTimeoutIds || []
+  ).filter((id) => id !== timeoutId);
+}
+
 function calculateBeatFrequencies(depthLevel = 0) {
   const adjustment = depthLevel * 2;
   return {
@@ -83,6 +104,7 @@ function resetBeatState(state) {
 }
 
 function resetIntermissionSurvey(state, { active = false } = {}) {
+  clearIntermissionSurveyTimeouts(state);
   state.inductionArcade.survey = createIntermissionSurveyState({ active });
 }
 
@@ -153,6 +175,7 @@ export default function inductionArcadeStore(state, emitter) {
     nextGameId: null,    // minigame shown in the instructions card
     lastAffirmation: "",
     affirmationTimeoutId: null,
+    surveyTimeoutIds: [],
     survey: createIntermissionSurveyState(),
     binauralBeat: {
       leftFrequency: DEFAULT_LEFT_FREQUENCY,
@@ -256,6 +279,8 @@ export default function inductionArcadeStore(state, emitter) {
     if (!survey?.active) return;
     if (survey.animPhase !== "idle") return;
 
+    clearIntermissionSurveyTimeouts(state);
+
     const question = survey.questions?.[survey.currentIndex];
     if (!question) return;
 
@@ -283,7 +308,8 @@ export default function inductionArcadeStore(state, emitter) {
     };
     emitter.emit("render");
 
-    setTimeout(() => {
+    const fadeTimeoutId = setTimeout(() => {
+      removeIntermissionSurveyTimeout(state, fadeTimeoutId);
       state.inductionArcade.survey = {
         ...state.inductionArcade.survey,
         animPhase: "out",
@@ -291,7 +317,10 @@ export default function inductionArcadeStore(state, emitter) {
       emitter.emit("render");
     }, 500);
 
-    setTimeout(() => {
+    trackIntermissionSurveyTimeout(state, fadeTimeoutId);
+
+    const advanceTimeoutId = setTimeout(() => {
+      removeIntermissionSurveyTimeout(state, advanceTimeoutId);
       if (isLast) {
         state.inductionArcade.phase = state.inductionArcade.nextGameId
           ? "instructions"
@@ -310,6 +339,8 @@ export default function inductionArcadeStore(state, emitter) {
 
       emitter.emit("render");
     }, 900);
+
+    trackIntermissionSurveyTimeout(state, advanceTimeoutId);
   });
 
   // ---- Lifecycle / navigation ----
