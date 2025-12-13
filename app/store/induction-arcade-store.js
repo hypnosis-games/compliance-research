@@ -609,6 +609,7 @@ export default function inductionArcadeStore(state, emitter) {
       });
     });
 
+    emitter.emit("inductionArcade/beginCurrentGame");
     emitter.emit("render");
   });
 
