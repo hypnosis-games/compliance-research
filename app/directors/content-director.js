@@ -10,6 +10,17 @@ import {
 
 const MAX_DEPTH = 5;
 
+function clampDepth(rawDepth = 0) {
+  const numericDepth = Number.isFinite(rawDepth) ? rawDepth : 0;
+  const clampedDepth = Math.max(0, Math.min(MAX_DEPTH, numericDepth));
+  return clampedDepth;
+}
+
+function getDepthBucket(rawDepth = 0) {
+  const clampedDepth = clampDepth(rawDepth);
+  return Math.round(clampedDepth);
+}
+
 const interjectionStepsByType = {
   focus: {
     0: [
@@ -57,11 +68,6 @@ const interjectionStepsByType = {
   },
 };
 
-function normalizeDepth(rawDepth = 0) {
-  const numericDepth = Number.isFinite(rawDepth) ? rawDepth : 0;
-  return Math.max(0, Math.min(MAX_DEPTH, Math.round(numericDepth)));
-}
-
 function pickRandom(items = []) {
   if (!items.length) return "";
   const index = Math.floor(Math.random() * items.length);
@@ -69,7 +75,7 @@ function pickRandom(items = []) {
 }
 
 function getTaskAffirmation({ depth = 0, outcome = "neutral" } = {}) {
-  const normalizedDepth = normalizeDepth(depth);
+  const normalizedDepth = getDepthBucket(depth);
   const outcomeKey = outcome === "success" ? "success" : "neutral";
   const bank = taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
     ? taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
@@ -78,7 +84,7 @@ function getTaskAffirmation({ depth = 0, outcome = "neutral" } = {}) {
 }
 
 function getSurveyAffirmation({ depth = 0, isPositive = false } = {}) {
-  const normalizedDepth = normalizeDepth(depth);
+  const normalizedDepth = getDepthBucket(depth);
   const toneKey = isPositive ? "positive" : "neutral";
   const bank = surveyAffirmationsByTone[toneKey][normalizedDepth]
     ? surveyAffirmationsByTone[toneKey][normalizedDepth]
@@ -87,7 +93,7 @@ function getSurveyAffirmation({ depth = 0, isPositive = false } = {}) {
 }
 
 function selectSurveyStatements(depth, count) {
-  const normalizedDepth = normalizeDepth(depth);
+  const normalizedDepth = getDepthBucket(depth);
   const availableStatements = Object.keys(surveyStatementsByDepth)
     .map(Number)
     .filter((level) => level <= normalizedDepth)
@@ -119,7 +125,7 @@ function getSurvey({ depth = 0, count = 5 } = {}) {
 }
 
 function getInterjection({ depth = 0, type = "focus" } = {}) {
-  const normalizedDepth = normalizeDepth(depth);
+  const normalizedDepth = getDepthBucket(depth);
   const typeKey = type === "relaxation" ? "relaxation" : "focus";
   const depthBanks = interjectionStepsByType[typeKey];
   if (!depthBanks) return [];
@@ -132,7 +138,9 @@ export const ContentDirector = Object.freeze({
   getSurveyAffirmation,
   getSurvey,
   getInterjection,
-  normalizeDepth,
+  normalizeDepth: getDepthBucket,
+  clampDepth,
+  getDepthBucket,
 });
 
 export default ContentDirector;

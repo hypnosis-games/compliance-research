@@ -10,7 +10,6 @@ import {
 } from "../phaser/induction-arcade-game.js";
 import {
   DEFAULT_LEFT_FREQUENCY,
-  DEFAULT_RIGHT_FREQUENCY,
   startBinauralBeat,
   stopBinauralBeat,
   updateBinauralBeat,
@@ -27,6 +26,8 @@ import {
   BEAT_INTENSITY_SCALE,
   DEFAULT_STARTING_GAME,
   DEPTH_INCREMENT_PER_SUCCESS,
+  DEPTH_INCREMENT_PER_POSITIVE_SURVEY,
+  DEPTH_INCREMENT_PER_RELAXATION_MS,
   GAME_IDS,
   MAX_DEPTH_LEVEL,
   PHASES,
@@ -65,20 +66,88 @@ function clearAffirmationTimeout(state) {
   state.inductionArcade.affirmationTimeoutId = null;
 }
 
+function clampDepthToRange(rawDepth = 0) {
+  const numericDepth = Number.isFinite(rawDepth) ? rawDepth : 0;
+  const clampedDepth = Math.max(0, Math.min(MAX_DEPTH_LEVEL, numericDepth));
+  return clampedDepth;
+}
+
 function calculateBeatFrequencies(depthLevel = 0) {
-  const adjustment = depthLevel * 2;
+  const clampedDepth = clampDepthToRange(depthLevel);
+  const depthProgress = clampedDepth / MAX_DEPTH_LEVEL;
+  const startingDifference = 11;
+  const targetDifference = 1.5;
+  const beatDifference =
+    startingDifference - (startingDifference - targetDifference) * depthProgress;
   return {
-    leftFrequency: DEFAULT_LEFT_FREQUENCY + adjustment,
-    rightFrequency: DEFAULT_RIGHT_FREQUENCY + adjustment,
+    leftFrequency: DEFAULT_LEFT_FREQUENCY,
+    rightFrequency: DEFAULT_LEFT_FREQUENCY + beatDifference,
   };
 }
 
 function deriveEnvironmentFromDepth(depthLevel = 0) {
+  const clampedDepth = clampDepthToRange(depthLevel);
   return {
-    depthLevel,
-    spiralIntensity: BASE_SPIRAL_INTENSITY + depthLevel * SPIRAL_SCALE_PER_DEPTH,
-    beatIntensity: BEAT_INTENSITY_BASE + depthLevel * BEAT_INTENSITY_SCALE,
+    depthLevel: clampedDepth,
+    spiralIntensity:
+      BASE_SPIRAL_INTENSITY + clampedDepth * SPIRAL_SCALE_PER_DEPTH,
+    beatIntensity: BEAT_INTENSITY_BASE + clampedDepth * BEAT_INTENSITY_SCALE,
   };
+}
+
+function applyDepthDelta(state, depthDelta = 0) {
+  const currentDepth = clampDepthToRange(state.conditioning?.depth || 0);
+  const nextDepth = clampDepthToRange(currentDepth + depthDelta);
+
+  state.conditioning.depth = nextDepth;
+  state.inductionArcade.env = {
+    ...state.inductionArcade.env,
+    ...deriveEnvironmentFromDepth(nextDepth),
+  };
+
+  if (state.inductionArcade.binauralBeat.playing) {
+    const frequencies = calculateBeatFrequencies(nextDepth);
+    state.inductionArcade.binauralBeat = {
+      ...state.inductionArcade.binauralBeat,
+      ...frequencies,
+    };
+    updateBinauralBeat(frequencies);
+  }
+
+  return nextDepth;
+}
+
+function stopRelaxationDepthTimer(state) {
+  if (state.inductionArcade?.relaxationDepthIntervalId) {
+    clearInterval(state.inductionArcade.relaxationDepthIntervalId);
+  }
+
+  state.inductionArcade.relaxationDepthIntervalId = null;
+  state.inductionArcade.relaxationDepthLastTick = null;
+}
+
+function startRelaxationDepthTimer(state, emitter) {
+  stopRelaxationDepthTimer(state);
+
+  state.inductionArcade.relaxationDepthLastTick = Date.now();
+  state.inductionArcade.relaxationDepthIntervalId = setInterval(() => {
+    const now = Date.now();
+    const lastTick = state.inductionArcade.relaxationDepthLastTick || now;
+    const elapsedMs = Math.max(0, now - lastTick);
+    state.inductionArcade.relaxationDepthLastTick = now;
+
+    if (elapsedMs === 0) return;
+
+    const beforeDepth = clampDepthToRange(state.conditioning?.depth || 0);
+    const afterDepth = applyDepthDelta(
+      state,
+      elapsedMs * DEPTH_INCREMENT_PER_RELAXATION_MS
+    );
+
+    if (afterDepth !== beforeDepth) {
+      emitter.emit("render");
+    }
+  }, 200);
 }
 
 function createIntermissionSurveyState({ active = false, depth = 0 } = {}) {
@@ -99,8 +168,7 @@ function createIntermissionSurveyState({ active = false, depth = 0 } = {}) {
 
 function resetBeatState(state) {
   state.inductionArcade.binauralBeat = {
-    leftFrequency: DEFAULT_LEFT_FREQUENCY,
-    rightFrequency: DEFAULT_RIGHT_FREQUENCY,
+    ...calculateBeatFrequencies(0),
     playing: false,
   };
 }
@@ -130,7 +198,7 @@ function resetInterjection(state) {
 
 function getDepth(state) {
   const currentDepth = state.conditioning?.depth ?? state.inductionArcade?.env?.depthLevel;
-  return ContentDirector.normalizeDepth(currentDepth || 0);
+  return clampDepthToRange(currentDepth || 0);
 }
 
 function normalizeGameId(raw) {
@@ -257,6 +325,17 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
     phase: nextPhase,
   };
 
+  const interjectionType =
+    nextPhase === PHASES.INTERJECTION
+      ? (state.inductionArcade.interjection?.type || null)
+      : null;
+
+  if (interjectionType === "relaxation") {
+    startRelaxationDepthTimer(state, emitter);
+  } else {
+    stopRelaxationDepthTimer(state);
+  }
+
   emitter.emit("render");
 }
 
@@ -326,10 +405,11 @@ export default function inductionArcadeStore(state, emitter) {
     survey: createIntermissionSurveyState({ depth: state.conditioning.depth || 0 }),
     interjection: createInterjectionState(),
     binauralBeat: {
-      leftFrequency: DEFAULT_LEFT_FREQUENCY,
-      rightFrequency: DEFAULT_RIGHT_FREQUENCY,
+      ...calculateBeatFrequencies(state.conditioning.depth || 0),
       playing: false,
     },
+    relaxationDepthIntervalId: null,
+    relaxationDepthLastTick: null,
   };
 
   // ---- Game events coming from Phaser ----
@@ -339,29 +419,10 @@ export default function inductionArcadeStore(state, emitter) {
     console.log("Game event from Phaser:", type, payload);
 
     if (type === "minigame/success") {
-      const depth = getDepth(state);
-      const newDepth = Math.min(
-        MAX_DEPTH_LEVEL,
-        depth + DEPTH_INCREMENT_PER_SUCCESS
-      );
-
-      state.conditioning.depth = newDepth;
-      state.inductionArcade.env = {
-        ...state.inductionArcade.env,
-        ...deriveEnvironmentFromDepth(newDepth),
-      };
-
-      if (state.inductionArcade.binauralBeat.playing) {
-        const frequencies = calculateBeatFrequencies(newDepth);
-        state.inductionArcade.binauralBeat = {
-          ...state.inductionArcade.binauralBeat,
-          ...frequencies,
-        };
-        updateBinauralBeat(frequencies);
-      }
+      const newDepth = applyDepthDelta(state, DEPTH_INCREMENT_PER_SUCCESS);
 
       state.inductionArcade.lastAffirmation = ContentDirector.getTaskAffirmation({
-        depth: newDepth,
+        depth: ContentDirector.getDepthBucket(newDepth),
         outcome: "success",
       });
 
@@ -441,8 +502,17 @@ export default function inductionArcadeStore(state, emitter) {
     };
 
     const isPraise = numeric >= 4;
+
+    let depthAfterSurvey = getDepth(state);
+    if (isPraise) {
+      depthAfterSurvey = applyDepthDelta(
+        state,
+        DEPTH_INCREMENT_PER_POSITIVE_SURVEY
+      );
+    }
+
     const fullAffirmation = ContentDirector.getSurveyAffirmation({
-      depth: getDepth(state),
+      depth: ContentDirector.getDepthBucket(depthAfterSurvey),
       isPositive: isPraise,
     });
 
