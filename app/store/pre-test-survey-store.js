@@ -8,7 +8,7 @@ import {
   complianceInstructions,
   complianceLikertLabels,
   complianceLikertOptions,
-} from "../data/compliance-questions.js";
+} from "../data/affirmation-and-question-strings.js";
 import { ContentDirector } from "../directors/content-director.js";
 
 export default function preTestSurveyStore(state, emitter) {
