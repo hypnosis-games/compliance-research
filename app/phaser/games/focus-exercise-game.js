@@ -6,18 +6,6 @@ Guides the player through a calming focus exercise with a pulsing white dot.
 
 const DOT_TEXTURE_KEY = "focusExerciseDot";
 
-function speakLine(line) {
-  if (typeof window === "undefined") return;
-  const synthesis = window.speechSynthesis;
-  if (!synthesis) return;
-
-  const utterance = new SpeechSynthesisUtterance(line);
-  utterance.rate = 0.95;
-  utterance.pitch = 1.02;
-  synthesis.cancel();
-  synthesis.speak(utterance);
-}
-
 export default class FocusExerciseGame {
   constructor(scene, { onComplete, onSuccess }) {
     this.scene = scene;
@@ -42,7 +30,7 @@ export default class FocusExerciseGame {
     ];
     this.instructionIndex = 0;
     this.completedLoops = 0;
-    this.targetLoops = 3;
+    this.targetLoops = 1;
     this.instructionDelayMs = 3000;
 
     const { width, height } = scene.scale;
@@ -130,7 +118,6 @@ export default class FocusExerciseGame {
 
       const line = this.instructionLines[this.instructionIndex];
       this.instructionText.setText(line);
-      speakLine(line);
 
       this.instructionIndex = (this.instructionIndex + 1) % this.instructionLines.length;
       if (this.instructionIndex === 0) {
