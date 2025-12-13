@@ -8,7 +8,12 @@ export default function InterjectionCard({ interjection = {}, emit }) {
 
   const currentStep = steps[currentIndex] || "";
   const totalSteps = steps.length;
-  const headline = type === "relaxation" ? "Sink deeper" : "Sharpen focus";
+  const headline =
+    type === "relaxation"
+      ? "Sink deeper"
+      : type === "wakener"
+      ? "Return to wakefulness"
+      : "Sharpen focus";
   const actionLabel = currentIndex + 1 >= totalSteps ? "Continue" : "Next";
 
   function advance() {

@@ -31,6 +31,7 @@ export default function InductionArcadeLayout(state, emit) {
   const isGamePhase = phase === "game";
   const isSurvey = phase === "survey";
   const isInterjection = phase === "interjection";
+  const isWakener = phase === "wakener";
   const isComplete = phase === "complete";
 
   // Button handlers
@@ -47,6 +48,11 @@ export default function InductionArcadeLayout(state, emit) {
   function onBeginCurrentGame(e) {
     e.preventDefault();
     emit("inductionArcade/beginCurrentGame");
+  }
+
+  function onRestartSurvey(e) {
+    e.preventDefault();
+    emit("inductionArcade/restart");
   }
 
   function onNext(e) {
@@ -96,7 +102,7 @@ export default function InductionArcadeLayout(state, emit) {
 
   return html`
     <section class="layout induction-arcade-layout">
-      ${isInterjection
+      ${isInterjection || isWakener
         ? InterjectionCard({ interjection, emit })
         : !isGamePhase && !isSurvey
         ? html`
@@ -145,8 +151,11 @@ export default function InductionArcadeLayout(state, emit) {
               ${isComplete
                 ? html`
                     <p class="instruction-main">
-                      Nice work. You have completed this task.
+                      Thank you for your participation.
                     </p>
+                    <button class="primary-btn mb2" onclick=${onRestartSurvey}>
+                      Repeat the survey
+                    </button>
                     <button class="primary-btn" onclick=${onNext}>
                       Continue to next part
                     </button>

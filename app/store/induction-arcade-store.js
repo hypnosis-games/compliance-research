@@ -99,6 +99,8 @@ function applyDepthDelta(state, depthDelta = 0) {
   const nextDepth = clampDepthToRange(currentDepth + depthDelta);
 
   state.conditioning.depth = nextDepth;
+  state.inductionArcade.hasReachedMaxDepth =
+    state.inductionArcade.hasReachedMaxDepth || nextDepth >= MAX_DEPTH_LEVEL;
   state.inductionArcade.env = {
     ...state.inductionArcade.env,
     ...deriveEnvironmentFromDepth(nextDepth),
@@ -147,6 +149,50 @@ function startRelaxationDepthTimer(state, emitter) {
       emitter.emit("render");
     }
   }, 200);
+}
+
+function resetCycleTracking(state) {
+  state.inductionArcade.cyclesCompleted = 0;
+  state.inductionArcade.cyclesAtMaxDepth = 0;
+  state.inductionArcade.hasReachedMaxDepth = false;
+}
+
+function registerCycleCompletion(state) {
+  const atMaxDepth = clampDepthToRange(state.conditioning?.depth || 0) >= MAX_DEPTH_LEVEL;
+  state.inductionArcade.cyclesCompleted =
+    (state.inductionArcade.cyclesCompleted || 0) + 1;
+  if (atMaxDepth || state.inductionArcade.hasReachedMaxDepth) {
+    state.inductionArcade.hasReachedMaxDepth = true;
+    state.inductionArcade.cyclesAtMaxDepth =
+      (state.inductionArcade.cyclesAtMaxDepth || 0) + 1;
+  }
+
+  return state.inductionArcade.hasReachedMaxDepth && state.inductionArcade.cyclesAtMaxDepth >= 1;
+}
+
+function beginWakenerSequence(state, emitter) {
+  stopRelaxationDepthTimer(state);
+  stopBinauralBeat();
+  resetBeatState(state);
+  const wakenerSteps = ContentDirector.getInterjection({
+    depth: MAX_DEPTH_LEVEL,
+    type: "wakener",
+  });
+
+  state.inductionArcade.interjection = {
+    active: true,
+    type: "wakener",
+    steps: wakenerSteps,
+    currentIndex: 0,
+    nextType: "wakener",
+  };
+
+  setInductionArcadePhase(state, emitter, PHASES.WAKENER, {
+    interjection: state.inductionArcade.interjection,
+    lastAffirmation: "",
+    currentGameId: null,
+    nextGameId: null,
+  });
 }
 
 function createIntermissionSurveyState({ active = false, depth = 0 } = {}) {
@@ -283,6 +329,7 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
     resetIntermissionSurvey(state);
     resetInterjection(state);
     state.conditioning.depth = 0;
+    resetCycleTracking(state);
     phaseSpecificPatch = {
       lastAffirmation: "",
       currentGameId: null,
@@ -309,6 +356,7 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
     resetIntermissionSurvey(state);
     resetInterjection(state);
     state.conditioning.depth = 0;
+    resetCycleTracking(state);
     phaseSpecificPatch = {
       lastAffirmation: "",
       currentGameId: null,
@@ -399,6 +447,9 @@ export default function inductionArcadeStore(state, emitter) {
     currentGameId: null,
     nextGameId: null,
     lastAffirmation: "",
+    cyclesCompleted: 0,
+    cyclesAtMaxDepth: 0,
+    hasReachedMaxDepth: false,
     affirmationTimeoutId: null,
     surveyTimeoutIds: [],
     survey: createIntermissionSurveyState({ depth: state.conditioning.depth || 0 }),
@@ -452,6 +503,14 @@ export default function inductionArcadeStore(state, emitter) {
     if (type === "minigame/complete") {
       const { final = true, id: completedGameId } = payload || {};
       const isRelaxation = completedGameId === GAME_IDS.FOCUS_EXERCISE;
+      if (isRelaxation) {
+        const shouldWake = registerCycleCompletion(state);
+        if (shouldWake) {
+          beginWakenerSequence(state, emitter);
+          emitter.emit("render");
+          return;
+        }
+      }
       const effectiveFinal = isRelaxation ? false : final;
 
       if (effectiveFinal) {
@@ -585,14 +644,21 @@ export default function inductionArcadeStore(state, emitter) {
 
     const nextIndex = interjection.currentIndex + 1;
     if (nextIndex >= interjection.steps.length) {
-      const nextGameId = state.inductionArcade.nextGameId;
       const resetState = createInterjectionState();
       resetState.nextType = interjection.nextType || resetState.nextType;
       state.inductionArcade.interjection = resetState;
-      advanceConditioningLoop(state, emitter, {
-        nextGameId,
-        allowInterjection: false,
-      });
+      if (interjection.type === "wakener") {
+        setInductionArcadePhase(state, emitter, PHASES.COMPLETE, {
+          currentGameId: null,
+          nextGameId: null,
+        });
+      } else {
+        const nextGameId = state.inductionArcade.nextGameId;
+        advanceConditioningLoop(state, emitter, {
+          nextGameId,
+          allowInterjection: false,
+        });
+      }
     } else {
       state.inductionArcade.interjection = {
         ...interjection,
@@ -643,6 +709,21 @@ export default function inductionArcadeStore(state, emitter) {
     setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
       currentGameId: null,
       nextGameId: null,
+    });
+
+    const scene = await ensureArcadeSceneReady();
+    scene.setMode("idle");
+  });
+
+  emitter.on("inductionArcade/restart", async () => {
+    if (!state.inductionArcade.active) return;
+
+    state.inductionArcade.gameOrder = getGameOrder(state.inductionArcade.startingGame);
+    setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
+      lastAffirmation: "",
+      currentGameId: null,
+      nextGameId: null,
+      env: deriveEnvironmentFromDepth(0),
     });
 
     const scene = await ensureArcadeSceneReady();

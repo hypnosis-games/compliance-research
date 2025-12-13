@@ -253,4 +253,13 @@ export const interjectionStepsByType = {
       "Rest deeply, waiting for the next command.",
     ],
   },
+  wakener: {
+    5: [
+      "Thank you for taking part in this survey.",
+      "Let your eyes brighten as you return to full awareness.",
+      "Breathe in and feel energy filling every part of you.",
+      "Stretch gently and notice how refreshed and alert you are becoming.",
+      "Feel great, awake, and ready to continue with a clear mind.",
+    ],
+  },
 };
