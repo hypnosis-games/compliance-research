@@ -35,15 +35,3 @@ export const complianceQuestions = [
   { id: "q19", text: "I want to do what is asked of me." },
   { id: "q20", text: "Being good feels right." },
 ];
-
-export function sampleComplianceQuestions(count = 5) {
-  const pool = [...complianceQuestions];
-  const selection = [];
-
-  while (selection.length < count && pool.length) {
-    const idx = Math.floor(Math.random() * pool.length);
-    selection.push(pool.splice(idx, 1)[0]);
-  }
-
-  return selection;
-}
