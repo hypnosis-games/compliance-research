@@ -1,3 +1,7 @@
+/*
+/app/directors/content-director.js
+Orchestrates content transitions and messaging between different app states.
+*/
 const MAX_DEPTH = 3;
 
 const affirmationBanks = {

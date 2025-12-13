@@ -1,3 +1,7 @@
+/*
+/app/index.js
+Bootstraps the client-side application by registering stores, views, and routes.
+*/
 // index.js
 import MainView from "./views/main-view.js";
 import store from "./store/store.js";

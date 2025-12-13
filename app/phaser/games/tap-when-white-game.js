@@ -1,3 +1,7 @@
+/*
+/app/phaser/games/tap-when-white-game.js
+Implements the Tap When White reflex mini-game including scoring and timing.
+*/
 // phaser/games/tap-when-white-game.js
 
 export default class TapWhenWhiteGame {

@@ -1,3 +1,7 @@
+/*
+/app/store/store.js
+Configures the Choo application store with routes and shared initialization logic.
+*/
 // store/store.js
 import layoutsDictionary, { moduleOrder } from "../views/layouts/layouts-dictionary.js";
 import inductionArcadeStore from "./induction-arcade-store.js";

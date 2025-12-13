@@ -1,3 +1,7 @@
+/*
+/app/store/pre-test-survey-store.js
+Manages state and side effects for the pre-test survey workflow.
+*/
 // store/pre-test-survey-store.js
 
 import {

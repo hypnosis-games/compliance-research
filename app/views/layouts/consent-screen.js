@@ -1,3 +1,7 @@
+/*
+/app/views/layouts/consent-screen.js
+Presents the consent screen content and captures participant acknowledgment.
+*/
 export default function ConsentScreen(state, emit) {
   return html`
     <div class="screen-shell">

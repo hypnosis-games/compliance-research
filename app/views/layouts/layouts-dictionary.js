@@ -1,3 +1,7 @@
+/*
+/app/views/layouts/layouts-dictionary.js
+Exports the mapping of layout names to their rendering functions for routing.
+*/
 // views/layouts/layouts-dictionary.js
 import ConsentScreen from "./consent-screen.js";
 import PersonalInfoScreen from "./personal-info-screen.js";

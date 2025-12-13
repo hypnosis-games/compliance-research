@@ -1,3 +1,7 @@
+/*
+/app/store/induction-arcade-store.js
+Handles game lifecycle state and user progress for the induction arcade experience.
+*/
 // store/induction-arcade-store.js
 import { onArcadeReady } from "../phaser/induction-arcade-game.js";
 import {

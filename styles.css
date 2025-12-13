@@ -1,3 +1,7 @@
+/*
+/styles.css
+Global stylesheet controlling layout and typography for the landing page.
+*/
 @import './app/views/styles/survey-styles.css';
 @import './app/views/styles/induction-arcade-styles.css';
 /* Make body fill viewport and use a calm, light background */

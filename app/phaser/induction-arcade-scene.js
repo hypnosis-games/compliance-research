@@ -1,3 +1,7 @@
+/*
+/app/phaser/induction-arcade-scene.js
+Defines the primary Phaser scene orchestrating visual effects and game progression.
+*/
 // phaser/induction-arcade-scene.js
 import TapWhenWhiteGame from "./games/tap-when-white-game.js";
 import FollowTheFadeGame from "./games/follow-the-fade-game.js";

@@ -1,3 +1,7 @@
+/*
+/app/views/styles/induction-arcade-styles.css
+Styles specific to the induction arcade game screens and interactive elements.
+*/
 /* Induction Arcade layout shell */
 .induction-arcade-layout {
   position: absolute;      /* sit over the Phaser canvas */
