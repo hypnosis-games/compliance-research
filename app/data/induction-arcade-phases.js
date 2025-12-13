@@ -9,5 +9,6 @@ export const PHASES = Object.freeze({
   GAME: "game",
   SURVEY: "survey",
   INTERJECTION: "interjection",
+  WAKENER: "wakener",
   COMPLETE: "complete",
 });

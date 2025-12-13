@@ -4,9 +4,9 @@ Defines numeric constants and configuration values shared across induction arcad
 */
 
 export const BASE_SPIRAL_INTENSITY = 0.01;
-export const DEPTH_INCREMENT_PER_SUCCESS = 0.1;
-export const DEPTH_INCREMENT_PER_POSITIVE_SURVEY = 0.05;
-export const DEPTH_INCREMENT_PER_RELAXATION_MS = 0.00002;
+export const DEPTH_INCREMENT_PER_SUCCESS = 0.035;
+export const DEPTH_INCREMENT_PER_POSITIVE_SURVEY = 0.02;
+export const DEPTH_INCREMENT_PER_RELAXATION_MS = 0.00001;
 export const MAX_DEPTH_LEVEL = 5;
 export const SPIRAL_SCALE_PER_DEPTH = 0.1;
 export const BEAT_INTENSITY_BASE = 0.3;

@@ -79,7 +79,12 @@ function getSurvey({ depth = 0, count = 5 } = {}) {
 
 function getInterjection({ depth = 0, type = "focus" } = {}) {
   const normalizedDepth = getDepthBucket(depth);
-  const typeKey = type === "relaxation" ? "relaxation" : "focus";
+  let typeKey = "focus";
+  if (type === "relaxation") {
+    typeKey = "relaxation";
+  } else if (type === "wakener") {
+    typeKey = "wakener";
+  }
   const depthBanks = interjectionStepsByType[typeKey];
   if (!depthBanks) return [];
   const sortedDepths = Object.keys(depthBanks)
