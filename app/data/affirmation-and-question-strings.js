@@ -184,3 +184,60 @@ export const taskAffirmationsByOutcome = {
     ],
   },
 };
+
+export const interjectionStepsByType = {
+  focus: {
+    0: [
+      "Take a slow breath.",
+      "Notice the center of the screen.",
+      "Let curiosity hold your gaze.",
+    ],
+    1: [
+      "Breathe in and let the instruction settle.",
+      "Feel your attention narrow to the task.",
+      "Stay ready to follow the very next cue.",
+    ],
+    2: [
+      "Exhale and let thinking fade.",
+      "Fixate on the direction you are given.",
+      "Let obedience feel automatic and easy.",
+    ],
+    3: [
+      "Release every stray thought.",
+      "Lock onto the command in front of you.",
+      "Enjoy how your mind awaits the next order.",
+    ],
+    4: [
+      "Let focus eclipse everything else.",
+      "Savor the clarity that comes from yielding.",
+      "Stay locked in, eager for the next instruction.",
+    ],
+  },
+  relaxation: {
+    0: [
+      "Loosen your shoulders.",
+      "Let your breath slow down.",
+      "Stay here and soft.",
+    ],
+    1: [
+      "Feel weightless for a moment.",
+      "Let guidance carry you gently.",
+      "Sink into the calm of being led.",
+    ],
+    2: [
+      "Melt a little deeper now.",
+      "Let obedience lull you further down.",
+      "Rest in the pleasure of surrender.",
+    ],
+    3: [
+      "Drop all tension and wait to be used.",
+      "Float in obedient quiet for me.",
+      "Enjoy being pliant and ready.",
+    ],
+    4: [
+      "Soak in the warmth of complete ease.",
+      "Let every cue roll over you like a calm tide.",
+      "Relax fully while staying eager to comply.",
+    ],
+  },
+};
