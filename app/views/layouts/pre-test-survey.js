@@ -1,25 +1,5 @@
 // views/pre-test-survey.js
-const neutralAffirmations = [
-  "Good.",
-  "Nice.",
-  "You’re doing well.",
-  "Next question.",
-  "Keep going.",
-  "Staying focused.",
-];
-
-const praiseAffirmations = [
-  "Very good.",
-  "That’s right.",
-  "Excellent.",
-  "Perfect.",
-  "Exactly.",
-  "Nicely done.",
-];
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+import { ContentDirector } from "../../directors/content-director.js";
 
 export default function PreTestSurvey(state, emit) {
   const survey = state.preTestSurvey || {};
@@ -57,9 +37,10 @@ export default function PreTestSurvey(state, emit) {
     };
 
     const isPraise = numeric >= 4;
-    const fullAffirmation = isPraise
-      ? pickRandom(praiseAffirmations)
-      : pickRandom(neutralAffirmations);
+    const fullAffirmation = ContentDirector.getAffirmation({
+      depth: state.conditioning?.depth || 0,
+      outcome: isPraise ? "success" : "neutral",
+    });
 
     const nextIndex = currentIndex + 1;
     const isLast = nextIndex >= totalQuestions;

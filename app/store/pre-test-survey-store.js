@@ -4,8 +4,8 @@ import {
   complianceInstructions,
   complianceLikertLabels,
   complianceLikertOptions,
-  sampleComplianceQuestions,
 } from "../data/compliance-questions.js";
+import { ContentDirector } from "../directors/content-director.js";
 
 export default function preTestSurveyStore(state, emitter) {
   const applyPatch = state.applyPatch
@@ -18,13 +18,20 @@ export default function preTestSurveyStore(state, emitter) {
         emitter.emit("render");
       };
 
+  state.conditioning = state.conditioning || { depth: 0 };
+
   state.preTestSurvey = state.preTestSurvey || {};
   const s = state.preTestSurvey;
+  const normalizedDepth = ContentDirector.normalizeDepth(
+    state.conditioning.depth || 0
+  );
 
   s.instructions = s.instructions || complianceInstructions;
   s.likertOptions = s.likertOptions || complianceLikertOptions;
   s.likertLabels = s.likertLabels || complianceLikertLabels;
-  s.questions = s.questions || sampleComplianceQuestions();
+  s.questions =
+    s.questions ||
+    ContentDirector.getSurvey({ depth: normalizedDepth, count: 5 });
 
   s.currentIndex =
     typeof s.currentIndex === "number" ? s.currentIndex : 0;

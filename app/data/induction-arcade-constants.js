@@ -4,6 +4,7 @@ export const PHASES = Object.freeze({
   INSTRUCTIONS: "instructions",
   GAME: "game",
   SURVEY: "survey",
+  INTERJECTION: "interjection",
   COMPLETE: "complete",
 });
 
@@ -13,11 +14,11 @@ export const GAME_IDS = Object.freeze({
 });
 
 export const BASE_SPIRAL_INTENSITY = 0.01;
-export const DEPTH_INCREMENT_PER_SUCCESS = 0.005;
-export const MAX_DEPTH_LEVEL = 1;
+export const DEPTH_INCREMENT_PER_SUCCESS = 1;
+export const MAX_DEPTH_LEVEL = 3;
 export const SPIRAL_SCALE_PER_DEPTH = 0.2;
 export const BEAT_INTENSITY_BASE = 0.3;
-export const BEAT_INTENSITY_SCALE = 0.5;
+export const BEAT_INTENSITY_SCALE = 0.2;
 
 export const TIMING = Object.freeze({
   AFFIRMATION_CLEAR_MS: 900,
@@ -29,33 +30,6 @@ export const DEFAULT_ENV = Object.freeze({
   depthLevel: 0,
   spiralIntensity: BASE_SPIRAL_INTENSITY,
   beatIntensity: BEAT_INTENSITY_BASE,
-});
-
-export const AFFIRMATIONS = Object.freeze({
-  GAMEPLAY: [
-    "So focused.",
-    "Very good.",
-    "So good.",
-    "Keep watching.",
-    "Nice.",
-    "Exactly right.",
-  ],
-  SURVEY_NEUTRAL: [
-    "Good.",
-    "Nice.",
-    "You’re doing well.",
-    "Next question.",
-    "Keep going.",
-    "Staying focused.",
-  ],
-  SURVEY_PRAISE: [
-    "Very good.",
-    "That’s right.",
-    "Excellent.",
-    "Perfect.",
-    "Exactly.",
-    "Nicely done.",
-  ],
 });
 
 export const DEFAULT_STARTING_GAME = GAME_IDS.TAP_WHEN_WHITE;

@@ -12,14 +12,11 @@ import {
   complianceInstructions,
   complianceLikertLabels,
   complianceLikertOptions,
-  sampleComplianceQuestions,
 } from "../data/compliance-questions.js";
 import {
-  AFFIRMATIONS,
   BASE_SPIRAL_INTENSITY,
   BEAT_INTENSITY_BASE,
   BEAT_INTENSITY_SCALE,
-  DEFAULT_ENV,
   DEFAULT_STARTING_GAME,
   DEPTH_INCREMENT_PER_SUCCESS,
   GAME_IDS,
@@ -28,12 +25,9 @@ import {
   SPIRAL_SCALE_PER_DEPTH,
   TIMING,
 } from "../data/induction-arcade-constants.js";
+import { ContentDirector } from "../directors/content-director.js";
 
 // ----------------- Helpers -----------------
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 function clearIntermissionSurveyTimeouts(state) {
   const timeoutIds = state.inductionArcade?.surveyTimeoutIds || [];
@@ -71,12 +65,20 @@ function calculateBeatFrequencies(depthLevel = 0) {
   };
 }
 
-function createIntermissionSurveyState({ active = false } = {}) {
+function deriveEnvironmentFromDepth(depthLevel = 0) {
+  return {
+    depthLevel,
+    spiralIntensity: BASE_SPIRAL_INTENSITY + depthLevel * SPIRAL_SCALE_PER_DEPTH,
+    beatIntensity: BEAT_INTENSITY_BASE + depthLevel * BEAT_INTENSITY_SCALE,
+  };
+}
+
+function createIntermissionSurveyState({ active = false, depth = 0 } = {}) {
   return {
     instructions: complianceInstructions,
     likertOptions: complianceLikertOptions,
     likertLabels: complianceLikertLabels,
-    questions: sampleComplianceQuestions(5),
+    questions: ContentDirector.getSurvey({ depth, count: 5 }),
     currentIndex: 0,
     responses: {},
     lastAffirmation: "",
@@ -97,7 +99,30 @@ function resetBeatState(state) {
 
 function resetIntermissionSurvey(state, { active = false } = {}) {
   clearIntermissionSurveyTimeouts(state);
-  state.inductionArcade.survey = createIntermissionSurveyState({ active });
+  const depth = ContentDirector.normalizeDepth(state.conditioning?.depth || 0);
+  state.inductionArcade.survey = createIntermissionSurveyState({
+    active,
+    depth,
+  });
+}
+
+function createInterjectionState() {
+  return {
+    active: false,
+    type: null,
+    steps: [],
+    currentIndex: 0,
+    nextType: "focus",
+  };
+}
+
+function resetInterjection(state) {
+  state.inductionArcade.interjection = createInterjectionState();
+}
+
+function getDepth(state) {
+  const currentDepth = state.conditioning?.depth ?? state.inductionArcade?.env?.depthLevel;
+  return ContentDirector.normalizeDepth(currentDepth || 0);
 }
 
 function normalizeGameId(raw) {
@@ -162,11 +187,13 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
     stopBinauralBeat();
     resetBeatState(state);
     resetIntermissionSurvey(state);
+    resetInterjection(state);
+    state.conditioning.depth = 0;
     phaseSpecificPatch = {
       lastAffirmation: "",
       currentGameId: null,
       nextGameId: null,
-      env: { ...DEFAULT_ENV },
+      env: deriveEnvironmentFromDepth(state.conditioning.depth),
     };
   }
 
@@ -178,15 +205,21 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
     resetIntermissionSurvey(state, { active: true });
   }
 
+  if (nextPhase === PHASES.INTERJECTION) {
+    resetIntermissionSurvey(state, { active: false });
+  }
+
   if (nextPhase === PHASES.COMPLETE) {
     stopBinauralBeat();
     resetBeatState(state);
     resetIntermissionSurvey(state);
+    resetInterjection(state);
+    state.conditioning.depth = 0;
     phaseSpecificPatch = {
       lastAffirmation: "",
       currentGameId: null,
       nextGameId: null,
-      env: { ...DEFAULT_ENV },
+      env: deriveEnvironmentFromDepth(state.conditioning.depth),
     };
   }
 
@@ -200,15 +233,62 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
   emitter.emit("render");
 }
 
+function advanceConditioningLoop(
+  state,
+  emitter,
+  { nextGameId = null, allowInterjection = true } = {}
+) {
+  const depth = getDepth(state);
+  const prospectiveInterjectionType =
+    state.inductionArcade.interjection?.nextType || "focus";
+  const shouldInsertInterjection = depth >= 1 && nextGameId !== null;
+
+  if (allowInterjection && shouldInsertInterjection) {
+    const interjectionSteps = ContentDirector.getInterjection({
+      depth,
+      type: prospectiveInterjectionType,
+    });
+
+    if (interjectionSteps.length) {
+      const nextTypeAfterThis =
+        prospectiveInterjectionType === "focus" ? "relaxation" : "focus";
+      state.inductionArcade.interjection = {
+        active: true,
+        type: prospectiveInterjectionType,
+        steps: interjectionSteps,
+        currentIndex: 0,
+        nextType: nextTypeAfterThis,
+      };
+
+      setInductionArcadePhase(state, emitter, PHASES.INTERJECTION, {
+        interjection: state.inductionArcade.interjection,
+      });
+      return;
+    }
+  }
+
+  setInductionArcadePhase(
+    state,
+    emitter,
+    nextGameId ? PHASES.INSTRUCTIONS : PHASES.COMPLETE,
+    {
+      currentGameId: null,
+      nextGameId,
+    }
+  );
+}
+
 // ----------------- Store -----------------
 
 export default function inductionArcadeStore(state, emitter) {
   const startingFromHash = parseStartingGameFromHash();
 
+  state.conditioning = state.conditioning || { depth: 0 };
+
   state.inductionArcade = state.inductionArcade || {
     active: false,
     phase: PHASES.HEADPHONES,
-    env: { ...DEFAULT_ENV },
+    env: deriveEnvironmentFromDepth(state.conditioning.depth || 0),
     startingGame: startingFromHash || DEFAULT_STARTING_GAME,
     gameOrder: getGameOrder(startingFromHash || DEFAULT_STARTING_GAME),
     currentGameId: null,
@@ -216,7 +296,8 @@ export default function inductionArcadeStore(state, emitter) {
     lastAffirmation: "",
     affirmationTimeoutId: null,
     surveyTimeoutIds: [],
-    survey: createIntermissionSurveyState(),
+    survey: createIntermissionSurveyState({ depth: state.conditioning.depth || 0 }),
+    interjection: createInterjectionState(),
     binauralBeat: {
       leftFrequency: DEFAULT_LEFT_FREQUENCY,
       rightFrequency: DEFAULT_RIGHT_FREQUENCY,
@@ -231,18 +312,16 @@ export default function inductionArcadeStore(state, emitter) {
     console.log("Game event from Phaser:", type, payload);
 
     if (type === "minigame/success") {
-      const depth = state.inductionArcade.env.depthLevel;
+      const depth = getDepth(state);
       const newDepth = Math.min(
         MAX_DEPTH_LEVEL,
         depth + DEPTH_INCREMENT_PER_SUCCESS
       );
 
+      state.conditioning.depth = newDepth;
       state.inductionArcade.env = {
         ...state.inductionArcade.env,
-        depthLevel: newDepth,
-        spiralIntensity:
-          BASE_SPIRAL_INTENSITY + newDepth * SPIRAL_SCALE_PER_DEPTH,
-        beatIntensity: BEAT_INTENSITY_BASE + newDepth * BEAT_INTENSITY_SCALE,
+        ...deriveEnvironmentFromDepth(newDepth),
       };
 
       if (state.inductionArcade.binauralBeat.playing) {
@@ -254,9 +333,10 @@ export default function inductionArcadeStore(state, emitter) {
         updateBinauralBeat(frequencies);
       }
 
-      state.inductionArcade.lastAffirmation = pickRandom(
-        AFFIRMATIONS.GAMEPLAY
-      );
+      state.inductionArcade.lastAffirmation = ContentDirector.getAffirmation({
+        depth: newDepth,
+        outcome: "success",
+      });
 
       clearAffirmationTimeout(state);
 
@@ -336,9 +416,10 @@ export default function inductionArcadeStore(state, emitter) {
     };
 
     const isPraise = numeric >= 4;
-    const fullAffirmation = isPraise
-      ? pickRandom(AFFIRMATIONS.SURVEY_PRAISE)
-      : pickRandom(AFFIRMATIONS.SURVEY_NEUTRAL);
+    const fullAffirmation = ContentDirector.getAffirmation({
+      depth: getDepth(state),
+      outcome: isPraise ? "success" : "neutral",
+    });
 
     const nextIndex = survey.currentIndex + 1;
     const isLast = nextIndex >= (survey.questions?.length || 0);
@@ -367,13 +448,9 @@ export default function inductionArcadeStore(state, emitter) {
     const advanceTimeoutId = setTimeout(() => {
       removeIntermissionSurveyTimeout(state, advanceTimeoutId);
       if (isLast) {
-        setInductionArcadePhase(
-          state,
-          emitter,
-          state.inductionArcade.nextGameId
-            ? PHASES.INSTRUCTIONS
-            : PHASES.COMPLETE
-        );
+        advanceConditioningLoop(state, emitter, {
+          nextGameId: state.inductionArcade.nextGameId,
+        });
       } else {
         state.inductionArcade.survey = {
           ...state.inductionArcade.survey,
@@ -389,6 +466,29 @@ export default function inductionArcadeStore(state, emitter) {
     }, TIMING.SURVEY_ADVANCE_MS);
 
     trackIntermissionSurveyTimeout(state, advanceTimeoutId);
+  });
+
+  emitter.on("inductionArcade/advanceInterjection", () => {
+    const interjection = state.inductionArcade.interjection;
+    if (!interjection?.active) return;
+
+    const nextIndex = interjection.currentIndex + 1;
+    if (nextIndex >= interjection.steps.length) {
+      const nextGameId = state.inductionArcade.nextGameId;
+      const resetState = createInterjectionState();
+      resetState.nextType = interjection.nextType || resetState.nextType;
+      state.inductionArcade.interjection = resetState;
+      advanceConditioningLoop(state, emitter, {
+        nextGameId,
+        allowInterjection: false,
+      });
+    } else {
+      state.inductionArcade.interjection = {
+        ...interjection,
+        currentIndex: nextIndex,
+      };
+      emitter.emit("render");
+    }
   });
 
   // ---- Lifecycle / navigation ----
@@ -475,7 +575,7 @@ export default function inductionArcadeStore(state, emitter) {
       currentGameId: null,
       nextGameId,
       lastAffirmation: "",
-      env: { ...DEFAULT_ENV },
+      env: deriveEnvironmentFromDepth(state.conditioning.depth),
     });
 
     const frequencies = calculateBeatFrequencies(

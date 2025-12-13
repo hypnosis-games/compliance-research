@@ -19,6 +19,7 @@ function pushModuleRoute(emitter, moduleName, resolver) {
 export default function store(state, emitter) {
   state.moduleOrder = moduleOrder;
   state.startModule = moduleOrder[0] || "consent";
+  state.conditioning = state.conditioning || { depth: 0 };
 
   const resolveModuleName = (moduleName) =>
     layoutsDictionary[moduleName] ? moduleName : state.startModule;
