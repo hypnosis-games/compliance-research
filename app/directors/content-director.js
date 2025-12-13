@@ -2,97 +2,13 @@
 /app/directors/content-director.js
 Orchestrates content transitions and messaging between different app states.
 */
+import {
+  surveyAffirmationsByTone,
+  surveyStatementsByDepth,
+  taskAffirmationsByOutcome,
+} from "../data/affirmation-and-question-strings.js";
+
 const MAX_DEPTH = 3;
-
-const affirmationBanks = {
-  success: {
-    0: [
-      "Good work.",
-      "You did that cleanly.",
-      "Nice focus.",
-      "That landed well.",
-    ],
-    1: [
-      "Very good focus.",
-      "You followed that perfectly.",
-      "Nice and steady.",
-      "You are syncing up well.",
-    ],
-    2: [
-      "You followed right on cue.",
-      "Obeying feels smooth, does it not?",
-      "Keep sinking into the rhythm.",
-      "You are wonderfully compliant.",
-    ],
-    3: [
-      "You obey so naturally now.",
-      "Perfect. Just like I want you.",
-      "Good subject. Keep yielding.",
-      "You love doing exactly as told.",
-    ],
-  },
-  neutral: {
-    0: [
-      "Keep going.",
-      "Stay with it.",
-      "Next one coming.",
-      "Hold your focus.",
-    ],
-    1: [
-      "Stay guided.",
-      "Follow the prompt.",
-      "Stay receptive.",
-      "Keep following along.",
-    ],
-    2: [
-      "Sink into the direction.",
-      "Let the guidance carry you.",
-      "Keep yielding to the cues.",
-      "Easier to follow than think.",
-    ],
-    3: [
-      "Just do as you are told.",
-      "Obedience is effortless now.",
-      "You love following every word.",
-      "Yield and please me.",
-    ],
-  },
-};
-
-const surveyStatementsByDepth = {
-  0: [
-    "I follow directions easily.",
-    "Being focused feels good.",
-    "I like being guided.",
-    "I want to do this right.",
-    "Doing well matters to me.",
-    "I keep my attention steady.",
-  ],
-  1: [
-    "I enjoy being directed.",
-    "I relax when I am led.",
-    "I like hearing what to do.",
-    "I want to be praised for obeying.",
-    "I feel safe following orders.",
-    "I give in to clear instructions.",
-  ],
-  2: [
-    "I sink deeper when told to.",
-    "Obeying feels natural now.",
-    "I crave more precise commands.",
-    "Being compliant feels soothing.",
-    "I love being reminded to yield.",
-    "I focus best when controlled.",
-  ],
-  3: [
-    "Obedience is the only thing I want.",
-    "I feel proud when I submit instantly.",
-    "I ache to be told what to do next.",
-    "I love proving my obedience.",
-    "I belong in instructed obedience.",
-    "I am happiest when I obey.",
-  ],
-};
 
 const interjectionStepsByType = {
   focus: {
@@ -152,12 +68,21 @@ function pickRandom(items = []) {
   return items[index];
 }
 
-function getAffirmation({ depth = 0, outcome = "neutral" } = {}) {
+function getTaskAffirmation({ depth = 0, outcome = "neutral" } = {}) {
   const normalizedDepth = normalizeDepth(depth);
   const outcomeKey = outcome === "success" ? "success" : "neutral";
-  const bank = affirmationBanks[outcomeKey][normalizedDepth]
-    ? affirmationBanks[outcomeKey][normalizedDepth]
-    : affirmationBanks[outcomeKey][0];
+  const bank = taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
+    ? taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
+    : taskAffirmationsByOutcome[outcomeKey][0];
+  return pickRandom(bank);
+}
+
+function getSurveyAffirmation({ depth = 0, isPositive = false } = {}) {
+  const normalizedDepth = normalizeDepth(depth);
+  const toneKey = isPositive ? "positive" : "neutral";
+  const bank = surveyAffirmationsByTone[toneKey][normalizedDepth]
+    ? surveyAffirmationsByTone[toneKey][normalizedDepth]
+    : surveyAffirmationsByTone[toneKey][0];
   return pickRandom(bank);
 }
 
@@ -203,7 +128,8 @@ function getInterjection({ depth = 0, type = "focus" } = {}) {
 }
 
 export const ContentDirector = Object.freeze({
-  getAffirmation,
+  getTaskAffirmation,
+  getSurveyAffirmation,
   getSurvey,
   getInterjection,
   normalizeDepth,

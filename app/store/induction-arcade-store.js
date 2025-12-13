@@ -20,7 +20,7 @@ import {
   complianceInstructions,
   complianceLikertLabels,
   complianceLikertOptions,
-} from "../data/compliance-questions.js";
+} from "../data/affirmation-and-question-strings.js";
 import {
   BASE_SPIRAL_INTENSITY,
   BEAT_INTENSITY_BASE,
@@ -341,7 +341,7 @@ export default function inductionArcadeStore(state, emitter) {
         updateBinauralBeat(frequencies);
       }
 
-      state.inductionArcade.lastAffirmation = ContentDirector.getAffirmation({
+      state.inductionArcade.lastAffirmation = ContentDirector.getTaskAffirmation({
         depth: newDepth,
         outcome: "success",
       });
@@ -422,9 +422,9 @@ export default function inductionArcadeStore(state, emitter) {
     };
 
     const isPraise = numeric >= 4;
-    const fullAffirmation = ContentDirector.getAffirmation({
+    const fullAffirmation = ContentDirector.getSurveyAffirmation({
       depth: getDepth(state),
-      outcome: isPraise ? "success" : "neutral",
+      isPositive: isPraise,
     });
 
     const nextIndex = survey.currentIndex + 1;

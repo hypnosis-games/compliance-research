@@ -40,10 +40,10 @@ export default function PreTestSurvey(state, emit) {
       [question.id]: numeric,
     };
 
-    const isPraise = numeric >= 4;
-    const fullAffirmation = ContentDirector.getAffirmation({
+    const isPositive = numeric >= 4;
+    const fullAffirmation = ContentDirector.getSurveyAffirmation({
       depth: state.conditioning?.depth || 0,
-      outcome: isPraise ? "success" : "neutral",
+      isPositive,
     });
 
     const nextIndex = currentIndex + 1;
