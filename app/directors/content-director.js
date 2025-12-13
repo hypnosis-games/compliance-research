@@ -28,12 +28,11 @@ function pickRandom(items = []) {
   return items[index];
 }
 
-function getTaskAffirmation({ depth = 0, outcome = "neutral" } = {}) {
+function getTaskAffirmation({ depth = 0 } = {}) {
   const normalizedDepth = getDepthBucket(depth);
-  const outcomeKey = outcome === "success" ? "success" : "neutral";
-  const bank = taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
-    ? taskAffirmationsByOutcome[outcomeKey][normalizedDepth]
-    : taskAffirmationsByOutcome[outcomeKey][0];
+  const bank = taskAffirmationsByOutcome.success[normalizedDepth]
+    ? taskAffirmationsByOutcome.success[normalizedDepth]
+    : taskAffirmationsByOutcome.success[0];
   return pickRandom(bank);
 }
 
