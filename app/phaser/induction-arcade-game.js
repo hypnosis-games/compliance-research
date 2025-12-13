@@ -4,7 +4,9 @@ Coordinates initialization of Phaser scenes and audio for the induction arcade.
 */
 // phaser/induction-arcade-game.js
 import InductionArcadeScene from "./induction-arcade-scene.js";
-import SpiralPostFXPipeline from "./spiral-postfx-pipeline.js";
+import SpiralPostFXPipeline, {
+  SPIRAL_PIPELINE_KEY,
+} from "./spiral-postfx-pipeline.js";
 
 let arcadeGame = null;
 let arcadeScene = null;
@@ -70,10 +72,12 @@ function resizeCanvas(game) {
 
   const canvas = game.canvas;
   if (canvas) {
-    canvas.style.height = "100vh";
-    canvas.style.width = "auto";
+    canvas.style.height = `${height}px`;
+    canvas.style.width = `${width}px`;
     canvas.style.maxHeight = "100vh";
-    canvas.style.maxWidth = "calc(100vh)";
+    canvas.style.maxWidth = "100vw";
+    canvas.style.display = "block";
+    canvas.style.margin = "0 auto";
   }
 }
 
@@ -99,9 +103,9 @@ export function initArcadeGame({ onGameEvent } = {}) {
     scale: {
       mode: Phaser.Scale.NONE,
     },
-    // Register the spiral as a PostFX pipeline so the scene can use camera.setPostPipeline("SpiralPostFX")
+    // Register the spiral as a PostFX pipeline so the scene can use camera.setPostPipeline(SPIRAL_PIPELINE_KEY)
     pipeline: {
-      SpiralPostFX: SpiralPostFXPipeline,
+      [SPIRAL_PIPELINE_KEY]: SpiralPostFXPipeline,
     },
     scene: [InductionArcadeScene],
   };
