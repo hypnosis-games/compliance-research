@@ -16,6 +16,7 @@ export default function InductionArcadeLayout(state, emit) {
     interjection = {},
   } = arcade;
 
+  // Determine if device is touch-capable"
   let isTouch = true;
   if (typeof window !== "undefined") {
     isTouch =
@@ -63,7 +64,7 @@ export default function InductionArcadeLayout(state, emit) {
   // Copy
   const introText =
     `This task measures focus and attention. ` +
-    `Watch the screen and ${actionWord} when it reaches the target brightness.`;
+    `Watch the screen and ${actionWord} when it reaches full brightness.`;
 
   // Instructions for each minigame
   let instructionsText = "";
@@ -80,8 +81,8 @@ export default function InductionArcadeLayout(state, emit) {
         `brightens to white. Stay focused on the changing light.`;
     } else if (nextGameId === "followTheFade") {
       instructionsText =
-        `Stay with the softly glowing dot. ${actionWord} as it brightens, ` +
-        `even as it drifts around the screen.`;
+        `Follow the softly glowing dot as it moves around the screen and ${actionWord} 
+        on it when it becomes fully bright.`;
     } else if (nextGameId === "focusExercise") {
       instructionsText =
         `Settle your gaze on the white dot. Let it guide your breath as it ` +

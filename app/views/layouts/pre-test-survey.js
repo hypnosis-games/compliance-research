@@ -6,6 +6,7 @@ Constructs the layout for the pre-test survey including navigation controls.
 import { ContentDirector } from "../../directors/content-director.js";
 
 export default function PreTestSurvey(state, emit) {
+  console.log("PreTestSurveyLayout state:", state);
   const survey = state.preTestSurvey || {};
   const {
     instructions = [],

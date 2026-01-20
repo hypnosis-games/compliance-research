@@ -265,7 +265,6 @@ Notes:
   fs.mkdirSync(outDirectory, { recursive: true });
   fs.writeFileSync(outFileAbsolutePath, combinedOutput, "utf8");
 
-  console.log(`Wrote ${filePathsAbsolute.length} files into: ${outFileAbsolutePath}`);
 }
 
 main();

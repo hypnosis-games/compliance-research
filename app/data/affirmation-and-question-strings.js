@@ -32,21 +32,21 @@ export const surveyStatementsByDepth = {
     "I feel good when I follow directions.",
     "I like being praised for doing well.",
     "I follow directions easily.",
-    "Being focused feels good.",
-    "I want to do this right.",
+    "It feels good to focus.",
+    "I like to do things correctly.",
   ],
   1: [
-    "It feels good to relax",
+    "It feels good to relax.",
     "I like having someone lead me.",
     "I feel relaxed when I’m told what to do.",
-    "I want to please others",
-    "It's easy to follow instructions when I am relaxed.",
+    "I want to please others.",
+    "It is easy to follow instructions when I am relaxed.",
   ],
   2: [
     "I relax when someone else is in charge.",
     "I feel calm and focused.",
     "I am very focused.",
-    "I am very relaxed",
+    "I am very relaxed.",
     "I enjoy obeying instructions.",
   ],
   3: [
@@ -65,11 +65,11 @@ export const surveyStatementsByDepth = {
     "I am happiest when I don't have to think.",
   ],
   5: [
-    "I want to be a good subject",
+    "I want to be a good subject.",
     "I don't want to think.",
-    "I want to obey",
-    "I want to feel good",
-    "Obedience is pleasure",
+    "I want to obey.",
+    "I want to feel good.",
+    "Obedience is pleasure.",
   ],
 };
 
@@ -112,7 +112,7 @@ export const surveyAffirmationsByTone = {
       "Wonderful.",
       "Excellent.",
       "Perfect.",
-            "Very good.",
+      "Very good.",
       "That's right.",
       "You are an ideal subject.",
     ],
@@ -121,52 +121,48 @@ export const surveyAffirmationsByTone = {
     0: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+      "Well done."
     ],
     1: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
-      "Acknowledged.",
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+      "Well done."
     ],
     2: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
-      "Acknowledged.",
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+            "Well done."
+
     ],
     3: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
-      "Acknowledged.",
-      "Good focus."
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+            "Well done."
+
     ],
     4: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
-      "Acknowledged.",
-      "Good focus."
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+      "Well done."
+
     ],
     5: [
       "Thank you",
       "Good.",
-      "Response recorded.",
-      "Noted.",
-      "Well done.",
-      "Acknowledged.",
-      "Good focus."
+      "We appreciate your input.",
+      "Your response is valuable to us.",
+      "Well done."
+
     ],
   },
 };

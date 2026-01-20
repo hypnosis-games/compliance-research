@@ -31,7 +31,10 @@ import {
   SPIRAL_SCALE_PER_DEPTH,
   TIMING,
 } from "../data/induction-arcade-constants.js";
-import { GAME_IDS, DEFAULT_STARTING_GAME } from "../data/induction-arcade-game-ids.js";
+import {
+  GAME_IDS,
+  DEFAULT_STARTING_GAME,
+} from "../data/induction-arcade-game-ids.js";
 import { PHASES } from "../data/induction-arcade-phases.js";
 import { ContentDirector } from "../directors/content-director.js";
 
@@ -77,7 +80,8 @@ function calculateBeatFrequencies(depthLevel = 0) {
   const startingDifference = 11;
   const targetDifference = 1.5;
   const beatDifference =
-    startingDifference - (startingDifference - targetDifference) * depthProgress;
+    startingDifference -
+    (startingDifference - targetDifference) * depthProgress;
   return {
     leftFrequency: DEFAULT_LEFT_FREQUENCY,
     rightFrequency: DEFAULT_LEFT_FREQUENCY + beatDifference,
@@ -142,7 +146,7 @@ function startRelaxationDepthTimer(state, emitter) {
     const beforeDepth = clampDepthToRange(state.conditioning?.depth || 0);
     const afterDepth = applyDepthDelta(
       state,
-      elapsedMs * DEPTH_INCREMENT_PER_RELAXATION_MS
+      elapsedMs * DEPTH_INCREMENT_PER_RELAXATION_MS,
     );
 
     if (afterDepth !== beforeDepth) {
@@ -158,7 +162,8 @@ function resetCycleTracking(state) {
 }
 
 function registerCycleCompletion(state) {
-  const atMaxDepth = clampDepthToRange(state.conditioning?.depth || 0) >= MAX_DEPTH_LEVEL;
+  const atMaxDepth =
+    clampDepthToRange(state.conditioning?.depth || 0) >= MAX_DEPTH_LEVEL;
   state.inductionArcade.cyclesCompleted =
     (state.inductionArcade.cyclesCompleted || 0) + 1;
   if (atMaxDepth || state.inductionArcade.hasReachedMaxDepth) {
@@ -167,7 +172,10 @@ function registerCycleCompletion(state) {
       (state.inductionArcade.cyclesAtMaxDepth || 0) + 1;
   }
 
-  return state.inductionArcade.hasReachedMaxDepth && state.inductionArcade.cyclesAtMaxDepth >= 1;
+  return (
+    state.inductionArcade.hasReachedMaxDepth &&
+    state.inductionArcade.cyclesAtMaxDepth >= 1
+  );
 }
 
 async function beginWakenerSequence(state, emitter) {
@@ -252,7 +260,8 @@ function resetInterjection(state) {
 }
 
 function getDepth(state) {
-  const currentDepth = state.conditioning?.depth ?? state.inductionArcade?.env?.depthLevel;
+  const currentDepth =
+    state.conditioning?.depth ?? state.inductionArcade?.env?.depthLevel;
   return clampDepthToRange(currentDepth || 0);
 }
 
@@ -270,10 +279,7 @@ function normalizeGameId(raw) {
     return str;
   }
 
-  const normalized = str
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/_/g, "-");
+  const normalized = str.toLowerCase().replace(/\s+/g, "-").replace(/_/g, "-");
 
   if (normalized === "tap-when-white") return "tapWhenWhite";
   if (normalized === "follow-the-fade") return "followTheFade";
@@ -330,10 +336,7 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
 
   let phaseSpecificPatch = {};
 
-  if (
-    nextPhase === PHASES.HEADPHONES ||
-    nextPhase === PHASES.INTRO
-  ) {
+  if (nextPhase === PHASES.HEADPHONES || nextPhase === PHASES.INTRO) {
     stopBinauralBeat();
     resetBeatState(state);
     resetIntermissionSurvey(state);
@@ -384,7 +387,7 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
 
   const interjectionType =
     nextPhase === PHASES.INTERJECTION
-      ? (state.inductionArcade.interjection?.type || null)
+      ? state.inductionArcade.interjection?.type || null
       : null;
 
   if (interjectionType === "relaxation") {
@@ -399,7 +402,7 @@ function setInductionArcadePhase(state, emitter, nextPhase, patch = {}) {
 function advanceConditioningLoop(
   state,
   emitter,
-  { nextGameId = null, allowInterjection = true } = {}
+  { nextGameId = null, allowInterjection = true } = {},
 ) {
   const depth = getDepth(state);
   const prospectiveInterjectionType =
@@ -437,7 +440,7 @@ function advanceConditioningLoop(
     {
       currentGameId: null,
       nextGameId,
-    }
+    },
   );
 }
 
@@ -462,7 +465,9 @@ export default function inductionArcadeStore(state, emitter) {
     hasReachedMaxDepth: false,
     affirmationTimeoutId: null,
     surveyTimeoutIds: [],
-    survey: createIntermissionSurveyState({ depth: state.conditioning.depth || 0 }),
+    survey: createIntermissionSurveyState({
+      depth: state.conditioning.depth || 0,
+    }),
     interjection: createInterjectionState(),
     binauralBeat: {
       ...calculateBeatFrequencies(state.conditioning.depth || 0),
@@ -483,13 +488,14 @@ export default function inductionArcadeStore(state, emitter) {
       const isRelaxationGame = gameId === GAME_IDS.FOCUS_EXERCISE;
       const newDepth = applyDepthDelta(state, DEPTH_INCREMENT_PER_SUCCESS);
 
-      const affirmation = isRelaxationGame && payload?.instruction
-        ? payload.instruction
-        : ContentDirector.getTaskAffirmation({
-            depth: ContentDirector.getDepthBucket(newDepth),
-            outcome: "success",
-            previousSelection: state.inductionArcade.lastAffirmation,
-          });
+      const affirmation =
+        isRelaxationGame && payload?.instruction
+          ? payload.instruction
+          : ContentDirector.getTaskAffirmation({
+              depth: ContentDirector.getDepthBucket(newDepth),
+              outcome: "success",
+              previousSelection: state.inductionArcade.lastAffirmation,
+            });
 
       state.inductionArcade.lastAffirmation = affirmation;
 
@@ -532,7 +538,7 @@ export default function inductionArcadeStore(state, emitter) {
       } else {
         // Move to next game in the order, keep env.spiralIntensity
         const currentIndex = state.inductionArcade.gameOrder.indexOf(
-          state.inductionArcade.currentGameId
+          state.inductionArcade.currentGameId,
         );
         const nextIndex = currentIndex + 1;
         let nextGame = state.inductionArcade.gameOrder[nextIndex] || null;
@@ -553,7 +559,7 @@ export default function inductionArcadeStore(state, emitter) {
           {
             currentGameId: null,
             nextGameId: nextGame,
-          }
+          },
         );
 
         // Re-assert spiral at current env intensity while showing survey/instructions
@@ -593,7 +599,7 @@ export default function inductionArcadeStore(state, emitter) {
     if (isPraise) {
       depthAfterSurvey = applyDepthDelta(
         state,
-        DEPTH_INCREMENT_PER_POSITIVE_SURVEY
+        DEPTH_INCREMENT_PER_POSITIVE_SURVEY,
       );
     }
 
@@ -701,7 +707,7 @@ export default function inductionArcadeStore(state, emitter) {
     state.inductionArcade.startingGame =
       startingFromHashNow || DEFAULT_STARTING_GAME;
     state.inductionArcade.gameOrder = getGameOrder(
-      state.inductionArcade.startingGame
+      state.inductionArcade.startingGame,
     );
 
     setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
@@ -730,7 +736,9 @@ export default function inductionArcadeStore(state, emitter) {
   emitter.on("inductionArcade/restart", async () => {
     if (!state.inductionArcade.active) return;
 
-    state.inductionArcade.gameOrder = getGameOrder(state.inductionArcade.startingGame);
+    state.inductionArcade.gameOrder = getGameOrder(
+      state.inductionArcade.startingGame,
+    );
     setInductionArcadePhase(state, emitter, PHASES.HEADPHONES, {
       lastAffirmation: "",
       currentGameId: null,
@@ -767,7 +775,7 @@ export default function inductionArcadeStore(state, emitter) {
       state.inductionArcade.nextGameId !== null
     ) {
       console.log(
-        "inductionArcade/startGame called mid-session; delegating to beginCurrentGame"
+        "inductionArcade/startGame called mid-session; delegating to beginCurrentGame",
       );
       emitter.emit("inductionArcade/beginCurrentGame");
       return;
@@ -779,7 +787,7 @@ export default function inductionArcadeStore(state, emitter) {
     }
 
     state.inductionArcade.gameOrder = getGameOrder(
-      state.inductionArcade.startingGame
+      state.inductionArcade.startingGame,
     );
     const nextGameId = state.inductionArcade.gameOrder[0];
 
@@ -791,7 +799,7 @@ export default function inductionArcadeStore(state, emitter) {
     });
 
     const frequencies = calculateBeatFrequencies(
-      state.inductionArcade.env.depthLevel
+      state.inductionArcade.env.depthLevel,
     );
     state.inductionArcade.binauralBeat = {
       ...state.inductionArcade.binauralBeat,

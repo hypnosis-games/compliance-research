@@ -31,7 +31,7 @@ export default class FocusExerciseGame {
     this.instructionIndex = 0;
     this.completedLoops = 0;
     this.targetLoops = 1;
-    this.instructionDelayMs = 2500;
+    this.instructionDelayMs = 3500;
 
     const { width, height } = scene.scale;
     const radius = Math.round(Math.min(width, height) * 0.06);
@@ -50,10 +50,11 @@ export default class FocusExerciseGame {
     this.dot.setAlpha(1);
     scene.gameLayer.add(this.dot);
 
-    this.baseScale = 1.1;
-    this.maxBaseScale = 1.9;
-    this.growMultiplier = 1.5;
-    this.shrinkMultiplier = 1.25;
+this.baseScale = .7;
+this.maxBaseScale = 1.9;
+this.minScaleMultiplier = 0.6;
+this.maxScaleMultiplier = 1.5;
+
 
     this.instructionText = scene.add.text(width / 2, height * 0.8, "", {
       fontFamily: "Arial",
@@ -71,9 +72,9 @@ export default class FocusExerciseGame {
 
   beginPulseCycle() {
     if (!this.isActive) return;
+const growTarget = this.baseScale * this.maxScaleMultiplier;
+const shrinkTarget = this.baseScale * this.minScaleMultiplier;
 
-    const growTarget = this.baseScale * this.growMultiplier;
-    const shrinkTarget = this.baseScale * this.shrinkMultiplier;
 
     this.dot.setScale(shrinkTarget);
 
@@ -88,13 +89,13 @@ export default class FocusExerciseGame {
         {
           scaleX: growTarget,
           scaleY: growTarget,
-          duration: 2500,
+          duration: this.instructionDelayMs,
           ease: "Sine.easeInOut",
         },
         {
           scaleX: shrinkTarget,
           scaleY: shrinkTarget,
-          duration: 2500,
+          duration: this.instructionDelayMs,
           ease: "Sine.easeInOut",
         },
       ],
