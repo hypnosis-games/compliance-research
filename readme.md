@@ -52,3 +52,4 @@ The project focuses on:
 
 - Build a **modular hypnotic game engine** extensible to multiple MC/fantasy tropes
 - Explore pacing, language, and interaction patterns for **effective interactive hypnosis** experiences
+- Placeholder: further documentation will outline setup steps and contributor guidelines.
